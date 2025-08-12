@@ -212,6 +212,13 @@ pub const BoxyBuilder = struct {
         return self;
     }
     
+    /// Set strategy for distributing extra space when width is constrained
+    /// If not set, defaults to .first for spreadsheet mode, .last for others
+    pub fn extraSpaceStrategy(self: *BoxyBuilder, strategy: layout.ExtraSpaceStrategy) *BoxyBuilder {
+        self.config.extra_space_strategy = strategy;
+        return self;
+    }
+    
     /// Set minimum width for the box
     pub fn min(self: *BoxyBuilder, width_value: usize) *BoxyBuilder {
         self.config.width = .{ .min = width_value };
@@ -230,6 +237,72 @@ pub const BoxyBuilder = struct {
         return self;
     }
     
+    /// Transform column sections for spreadsheet mode
+    /// First set becomes column headers, rest become rows with row headers
+    fn transformToSpreadsheet(self: *BoxyBuilder, column_sections: std.ArrayList(Section)) !struct { headers: Section, data: ?Section } {
+        if (column_sections.items.len == 0) {
+            return .{ .headers = undefined, .data = null };
+        }
+        
+        // First set becomes column headers (including the "Staff" label or similar)
+        const first_set = column_sections.items[0];
+        
+        // Column headers: first set's header + its data items
+        var col_headers = try self.arena_allocator.alloc([]const u8, 1 + first_set.data.len);
+        col_headers[0] = first_set.headers[0]; // e.g., "Staff"
+        for (first_set.data, 0..) |item, i| {
+            col_headers[i + 1] = item; // e.g., "Mon", "Tue", etc.
+        }
+        
+        const headers_section = Section{
+            .section_type = .headers,
+            .orientation = self.config.orientation,
+            .headers = col_headers,
+            .data = &.{},
+            .alignment = self.config.alignment,
+        };
+        
+        // Process remaining sets as rows
+        if (column_sections.items.len > 1) {
+            // Each subsequent set: header becomes row header, data becomes row data
+            const num_data_rows = column_sections.items.len - 1;
+            const num_cols = col_headers.len; // Including row header column
+            
+            var all_data = try self.arena_allocator.alloc([]const u8, num_data_rows * num_cols);
+            
+            for (column_sections.items[1..], 0..) |section, row_idx| {
+                // First column is the row header (e.g., "Alice")
+                all_data[row_idx * num_cols] = section.headers[0];
+                
+                // Rest of columns are the data
+                for (section.data, 0..) |cell, col_idx| {
+                    if (col_idx + 1 < num_cols) {
+                        all_data[row_idx * num_cols + col_idx + 1] = cell;
+                    } else {
+                        break; // Too many data items for columns
+                    }
+                }
+                
+                // Fill any remaining columns with empty strings
+                for (section.data.len + 1..num_cols) |col_idx| {
+                    all_data[row_idx * num_cols + col_idx] = "";
+                }
+            }
+            
+            const data_section = Section{
+                .section_type = .data,
+                .orientation = self.config.orientation,
+                .headers = col_headers,
+                .data = all_data,
+                .alignment = self.config.alignment,
+            };
+            
+            return .{ .headers = headers_section, .data = data_section };
+        }
+        
+        return .{ .headers = headers_section, .data = null };
+    }
+
     /// Build the final box (consumes the builder)
     pub fn build(self: *BoxyBuilder) !BoxyBox {
         // Don't deinit anything here - we'll transfer the arena to BoxyBox
@@ -271,63 +344,11 @@ pub const BoxyBuilder = struct {
         // If we have columns, organize them into a table
         if (has_columns) {
             if (self.config.spreadsheet_mode) {
-                // Spreadsheet mode: first set is column headers, rest are rows with row headers
-                if (column_sections.items.len > 0) {
-                    // First set becomes column headers (including the "Staff" label or similar)
-                    const first_set = column_sections.items[0];
-                    
-                    // Column headers: first set's header + its data items
-                    var col_headers = try self.arena_allocator.alloc([]const u8, 1 + first_set.data.len);
-                    col_headers[0] = first_set.headers[0]; // e.g., "Staff"
-                    for (first_set.data, 0..) |item, i| {
-                        col_headers[i + 1] = item; // e.g., "Mon", "Tue", etc.
-                    }
-                    
-                    // Add headers section
-                    try organized_sections.append(.{
-                        .section_type = .headers,
-                        .orientation = self.config.orientation,
-                        .headers = col_headers,
-                        .data = &.{},
-                        .alignment = self.config.alignment,
-                    });
-                    
-                    // Process remaining sets as rows
-                    if (column_sections.items.len > 1) {
-                        // Each subsequent set: header becomes row header, data becomes row data
-                        const num_data_rows = column_sections.items.len - 1;
-                        const num_cols = col_headers.len; // Including row header column
-                        
-                        var all_data = try self.arena_allocator.alloc([]const u8, num_data_rows * num_cols);
-                        
-                        for (column_sections.items[1..], 0..) |section, row_idx| {
-                            // First column is the row header (e.g., "Alice")
-                            all_data[row_idx * num_cols] = section.headers[0];
-                            
-                            // Rest of columns are the data
-                            for (section.data, 0..) |cell, col_idx| {
-                                if (col_idx + 1 < num_cols) {
-                                    all_data[row_idx * num_cols + col_idx + 1] = cell;
-                                } else {
-                                    break; // Too many data items for columns
-                                }
-                            }
-                            
-                            // Fill any remaining columns with empty strings
-                            for (section.data.len + 1..num_cols) |col_idx| {
-                                all_data[row_idx * num_cols + col_idx] = "";
-                            }
-                        }
-                        
-                        // Add data section
-                        try organized_sections.append(.{
-                            .section_type = .data,
-                            .orientation = self.config.orientation,
-                            .headers = col_headers,
-                            .data = all_data,
-                            .alignment = self.config.alignment,
-                        });
-                    }
+                // Spreadsheet mode: transform columns to rows with headers
+                const transformed = try self.transformToSpreadsheet(column_sections);
+                try organized_sections.append(transformed.headers);
+                if (transformed.data) |data_section| {
+                    try organized_sections.append(data_section);
                 }
             } else {
                 // Normal column mode - organize into headers + data
@@ -483,6 +504,7 @@ const BoxyConfig = struct {
     alignment: Alignment = .left,
     canvas_width: usize = 0,
     canvas_height: usize = 0,
+    extra_space_strategy: ?layout.ExtraSpaceStrategy = null,  // null means auto-detect
     
     pub fn default() BoxyConfig {
         return .{};

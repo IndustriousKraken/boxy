@@ -7,6 +7,16 @@
 const std = @import("std");
 const utils = @import("utils.zig");
 
+/// Get the display width of a theme's column separator (first line only)
+fn getSeparatorWidth(theme_obj: anytype) usize {
+    const separator = theme_obj.inner.v;
+    const separator_first_line = if (std.mem.indexOfScalar(u8, separator, '\n')) |idx|
+        separator[0..idx]
+    else
+        separator;
+    return utils.displayWidth(separator_first_line);
+}
+
 /// Configuration constants
 pub const Constants = struct {
     /// Default width for columns when no content is available
@@ -31,6 +41,14 @@ pub const Orientation = enum {
     pub fn shouldTranspose(self: Orientation) bool {
         return self == .rows;
     }
+};
+
+/// Strategy for distributing extra space when width is constrained
+pub const ExtraSpaceStrategy = enum {
+    first,       // Add extra space to first columns (good for spreadsheets with row headers)
+    last,        // Add extra space to last columns (good for uniform grids)
+    distributed, // Distribute extra space evenly across all columns
+    center,      // Add extra space to center columns
 };
 
 /// Text alignment within cells
@@ -132,30 +150,21 @@ pub const SectionType = enum {
     divider,
 };
 
-/// Calculate complete layout for a box
-pub fn calculate(allocator: std.mem.Allocator, config: anytype, sections: anytype) !LayoutInfo {
-    const cell_padding = if (@hasField(@TypeOf(config), "cell_padding")) config.cell_padding else Constants.DEFAULT_CELL_PADDING;
-    
-    // Find the maximum number of columns and rows from all sections
+/// Calculate natural column widths based on content
+fn calculateNaturalColumnWidths(allocator: std.mem.Allocator, sections: anytype, cell_padding: usize) ![]usize {
+    // Find the maximum number of columns from all sections
     var max_columns: usize = 0;
-    var max_rows: usize = 0;
     
     for (sections.items) |section| {
         if (section.section_type == .headers) {
             max_columns = @max(max_columns, section.headers.len);
         } else if (section.section_type == .data) {
             max_columns = @max(max_columns, section.headers.len);
-            // Count rows in data
-            if (section.headers.len > 0 and section.data.len > 0) {
-                const rows_in_section = section.data.len / section.headers.len;
-                max_rows = @max(max_rows, rows_in_section);
-            }
         }
     }
     
     // If no columns found, use default
     if (max_columns == 0) max_columns = 1;
-    if (max_rows == 0) max_rows = 1;
     
     // Calculate column widths based on actual data
     const column_widths = try allocator.alloc(usize, max_columns);
@@ -187,9 +196,99 @@ pub fn calculate(allocator: std.mem.Allocator, config: anytype, sections: anytyp
     
     // Add padding to each column and ensure minimum width
     for (column_widths) |*width| {
-        if (width.* == 0) width.* = Constants.DEFAULT_COLUMN_WIDTH;  // Default minimum
+        if (width.* == 0) width.* = Constants.DEFAULT_COLUMN_WIDTH;
         width.* += cell_padding * 2;  // Add padding on both sides
     }
+    
+    return column_widths;
+}
+
+/// Apply width constraints and distribute extra space among columns
+fn applyWidthConstraints(column_widths: []usize, total_width: usize, natural_width: usize, final_content_width: usize, theme_obj: anytype, config: anytype) void {
+    // If width was constrained and we have columns, redistribute column widths
+    if (total_width != natural_width and column_widths.len > 0) {
+        // Calculate available space for columns after accounting for separators
+        // single_separator_width already calculated above
+        const single_separator_width = getSeparatorWidth(theme_obj);
+        const separator_total_width = if (column_widths.len > 1) 
+            (column_widths.len - 1) * single_separator_width 
+        else 
+            0;
+        // Tables don't use padding, so don't subtract it
+        const available_for_columns = if (final_content_width > separator_total_width)
+            final_content_width - separator_total_width
+        else
+            column_widths.len; // Minimum 1 char per column
+        
+        // Distribute evenly among columns
+        const width_per_column = available_for_columns / column_widths.len;
+        const extra_width = available_for_columns % column_widths.len;
+        
+        // Determine effective strategy (auto-detect if not specified)
+        const strategy = if (@hasField(@TypeOf(config), "extra_space_strategy") and config.extra_space_strategy != null)
+            config.extra_space_strategy.?
+        else if (@hasField(@TypeOf(config), "spreadsheet_mode") and config.spreadsheet_mode)
+            ExtraSpaceStrategy.first  // Spreadsheet: extra to first column (row headers)
+        else
+            ExtraSpaceStrategy.last;  // Regular table: extra to last columns
+        
+        // Debug: Print the strategy being used
+        // std.debug.print("Strategy: {}, spreadsheet_mode: {}, extra_width: {}\n", .{strategy, config.spreadsheet_mode, extra_width});
+        
+        for (column_widths, 0..) |*width, i| {
+            width.* = width_per_column;
+            
+            // Add extra width based on strategy
+            switch (strategy) {
+                .first => {
+                    // Add extra width to first columns
+                    if (i < extra_width) {
+                        width.* += 1;
+                    }
+                },
+                .last => {
+                    // Add extra width to last columns
+                    const last_start = column_widths.len - extra_width;
+                    if (i >= last_start) {
+                        width.* += 1;
+                    }
+                },
+                .distributed => {
+                    // Already handled by width_per_column; 
+                    // for true distribution we'd spread more evenly
+                    if (i < extra_width) {
+                        width.* += 1;
+                    }
+                },
+                .center => {
+                    // Add extra width to center columns
+                    const center_start = (column_widths.len - extra_width) / 2;
+                    const center_end = center_start + extra_width;
+                    if (i >= center_start and i < center_end) {
+                        width.* += 1;
+                    }
+                },
+            }
+        }
+    }
+}
+
+/// Calculate complete layout for a box
+pub fn calculate(allocator: std.mem.Allocator, config: anytype, sections: anytype) !LayoutInfo {
+    const cell_padding = if (@hasField(@TypeOf(config), "cell_padding")) config.cell_padding else Constants.DEFAULT_CELL_PADDING;
+    
+    // Calculate natural column widths from content
+    const column_widths = try calculateNaturalColumnWidths(allocator, sections, cell_padding);
+    
+    // Count maximum rows for height allocation
+    var max_rows: usize = 0;
+    for (sections.items) |section| {
+        if (section.section_type == .data and section.headers.len > 0 and section.data.len > 0) {
+            const rows_in_section = section.data.len / section.headers.len;
+            max_rows = @max(max_rows, rows_in_section);
+        }
+    }
+    if (max_rows == 0) max_rows = 1;
     
     const row_heights = try allocator.alloc(usize, max_rows + Constants.EXTRA_ROW_BUFFER); // Extra for headers/padding
     @memset(row_heights, 1);
@@ -212,9 +311,14 @@ pub fn calculate(allocator: std.mem.Allocator, config: anytype, sections: anytyp
     for (column_widths) |width| {
         content_width += width;
     }
-    // Add separators between columns (│ character is 3 bytes in UTF-8)
+    
+    // Get actual separator width from theme (could be multi-character like "::")
+    const theme = config.theme;
+    const single_separator_width = getSeparatorWidth(theme);
+    
+    // Add separators between columns
     if (column_widths.len > 1) {
-        content_width += column_widths.len - 1;  // One separator between each column
+        content_width += (column_widths.len - 1) * single_separator_width;
     }
     
     // Note: Box padding is handled separately in title sections
@@ -222,7 +326,6 @@ pub fn calculate(allocator: std.mem.Allocator, config: anytype, sections: anytyp
     const padding = Padding{};
     
     // Calculate actual border widths from theme
-    const theme = config.theme;
     // Get the first line of borders (for multi-line borders)
     const left_border = theme.getLeft();
     const right_border = theme.getRight();
@@ -254,33 +357,34 @@ pub fn calculate(allocator: std.mem.Allocator, config: anytype, sections: anytyp
     else
         content_width;
     
-    // If width was constrained and we have columns, redistribute column widths
-    if (total_width != natural_width and column_widths.len > 0) {
-        // Calculate available space for columns after accounting for separators
-        const separator_total_width = if (column_widths.len > 1) column_widths.len - 1 else 0;
-        const available_for_columns = if (final_content_width > separator_total_width + padding.horizontal())
-            final_content_width - separator_total_width - padding.horizontal()
-        else
-            column_widths.len; // Minimum 1 char per column
-        
-        // Distribute evenly among columns
-        const width_per_column = available_for_columns / column_widths.len;
-        const extra_width = available_for_columns % column_widths.len;
-        
-        for (column_widths, 0..) |*width, i| {
-            width.* = width_per_column;
-            // Add extra width to first columns to use all available space
-            if (i < extra_width) {
-                width.* += 1;
-            }
+    // Apply width constraints if needed
+    applyWidthConstraints(column_widths, total_width, natural_width, final_content_width, theme, config);
+    
+    // Calculate actual height from sections
+    var total_lines: usize = 0;
+    for (sections.items) |section| {
+        switch (section.section_type) {
+            .title => total_lines += section.data.len + 2, // Title lines + padding
+            .headers => total_lines += 1,
+            .data => {
+                if (section.headers.len > 0 and section.data.len > 0) {
+                    total_lines += section.data.len / section.headers.len;
+                }
+            },
+            .divider => total_lines += 1,
+            .canvas => {}, // Canvas height handled separately
         }
     }
     
+    // Add borders and dividers
+    const total_height = total_lines + 4; // Top border + bottom border + header divider + padding
+    const content_height = total_lines;
+    
     return .{
         .total_width = total_width,
-        .total_height = 12, // Placeholder - should calculate based on rows
+        .total_height = total_height,
         .content_width = final_content_width,
-        .content_height = 10,
+        .content_height = content_height,
         .column_widths = column_widths,
         .row_heights = row_heights,
         .padding = padding,

@@ -42,6 +42,16 @@ pub const TableRenderOptions = struct {
     cell_padding: usize,
 };
 
+/// Get the display width of a theme's column separator (first line only)
+fn getSeparatorWidth(box_theme: theme.BoxyTheme) usize {
+    const separator = box_theme.inner.v;
+    const separator_first_line = if (std.mem.indexOfScalar(u8, separator, '\n')) |idx|
+        separator[0..idx]
+    else
+        separator;
+    return utils.displayWidth(separator_first_line);
+}
+
 /// Render a complete box to a string
 pub fn renderBox(allocator: std.mem.Allocator, boxy_box: *const box.BoxyBox) ![]const u8 {
     var buffer = std.ArrayList(u8).init(allocator);
@@ -57,7 +67,7 @@ pub fn renderBox(allocator: std.mem.Allocator, boxy_box: *const box.BoxyBox) ![]
         .layout_info = boxy_box.layout_info,
     };
     
-    // Render top border (with column junctions if there are headers)
+    // Render top border (with column junctions only if columns start at the top)
     const has_columns = blk: {
         for (boxy_box.sections) |section| {
             if (section.section_type == .headers or section.section_type == .data) {
@@ -67,7 +77,12 @@ pub fn renderBox(allocator: std.mem.Allocator, boxy_box: *const box.BoxyBox) ![]
         break :blk false;
     };
     
-    if (has_columns) {
+    // Only show top junctions if the first section has columns (not a title)
+    const show_top_junctions = has_columns and 
+        boxy_box.sections.len > 0 and 
+        (boxy_box.sections[0].section_type == .headers or boxy_box.sections[0].section_type == .data);
+    
+    if (show_top_junctions) {
         try renderTopBorder(writer, ctx.theme, ctx.total_width, ctx.layout_info.column_widths);
     } else {
         try renderTopBorder(writer, ctx.theme, ctx.total_width, null);
@@ -132,21 +147,26 @@ fn renderTopBorder(writer: anytype, box_theme: theme.BoxyTheme, width: usize, co
         const tr_width = utils.displayWidth(tr_corner);
         const border_width = if (width > tl_width + tr_width) width - tl_width - tr_width else 0;
         
-        // If we have columns, render with junctions
+        // If we have columns, render with junctions at the correct positions
         if (column_widths) |cols| {
             var position: usize = 0;
+            
+            // Get actual separator width from theme
+            const separator_width = getSeparatorWidth(box_theme);
+            
             for (cols, 0..) |col_width, i| {
+                // Render border segment for this column
                 try renderPattern(writer, top_pattern, col_width);
                 position += col_width;
                 
-                // Add junction if not last column
+                // Add junction if not last column (junction replaces separator)
                 if (i < cols.len - 1) {
                     try writer.writeAll(box_theme.junction.top);
-                    position += 1; // Junction is typically 1 display column
+                    position += separator_width;  // Account for actual separator width
                 }
             }
             
-            // Fill any remaining space
+            // Fill any remaining space (should be 0 if calculations are correct)
             if (position < border_width) {
                 try renderPattern(writer, top_pattern, border_width - position);
             }
@@ -200,21 +220,26 @@ fn renderBottomBorder(writer: anytype, box_theme: theme.BoxyTheme, width: usize,
         const br_width = utils.displayWidth(br_corner);
         const border_width = if (width > bl_width + br_width) width - bl_width - br_width else 0;
         
-        // If we have columns, render with junctions
+        // If we have columns, render with junctions at the correct positions
         if (column_widths) |cols| {
             var position: usize = 0;
+            
+            // Get actual separator width from theme
+            const separator_width = getSeparatorWidth(box_theme);
+            
             for (cols, 0..) |col_width, i| {
+                // Render border segment for this column
                 try renderPattern(writer, bottom_pattern, col_width);
                 position += col_width;
                 
-                // Add junction if not last column
+                // Add junction if not last column (junction replaces separator)
                 if (i < cols.len - 1) {
                     try writer.writeAll(box_theme.junction.bottom);
-                    position += 1; // Junction is typically 1 display column
+                    position += separator_width;  // Account for actual separator width
                 }
             }
             
-            // Fill any remaining space
+            // Fill any remaining space (should be 0 if calculations are correct)
             if (position < border_width) {
                 try renderPattern(writer, bottom_pattern, border_width - position);
             }
@@ -263,21 +288,31 @@ fn renderSectionDivider(writer: anytype, box_theme: theme.BoxyTheme, width: usiz
     else 
         0;
     
-    // If we have columns, render with junctions
+    // If we have columns, render with junctions at the correct positions
     if (column_widths) |cols| {
         var position: usize = 0;
+        
+        // Get actual separator width from theme
+        const separator = box_theme.inner.v;
+        const separator_first_line = if (std.mem.indexOfScalar(u8, separator, '\n')) |idx|
+            separator[0..idx]
+        else
+            separator;
+        const separator_width = utils.displayWidth(separator_first_line);
+        
         for (cols, 0..) |col_width, i| {
+            // Render divider segment for this column
             try renderPattern(writer, box_theme.inner.section, col_width);
             position += col_width;
             
-            // Add junction if not last column (use t_down since columns continue down)
+            // Add junction if not last column (junction replaces separator)
             if (i < cols.len - 1) {
                 try writer.writeAll(box_theme.inner.t_down);
-                position += 1;
+                position += separator_width;  // Account for actual separator width
             }
         }
         
-        // Fill any remaining space
+        // Fill any remaining space (should be 0 if calculations are correct)
         if (position < divider_width) {
             try renderPattern(writer, box_theme.inner.section, divider_width - position);
         }
@@ -299,15 +334,10 @@ fn renderHeaderDivider(writer: anytype, box_theme: theme.BoxyTheme, width: usize
     // Calculate actual junction widths
     const left_width = utils.displayWidth(box_theme.junction.left);
     const right_width = utils.displayWidth(box_theme.junction.right);
-    const t_down_width = utils.displayWidth(box_theme.inner.t_down);
+    const cross_width = utils.displayWidth(box_theme.inner.cross);
     
-    // Get the display width of the column separator (first line only)
-    const column_separator = box_theme.inner.v;
-    const separator_first_line = if (std.mem.indexOfScalar(u8, column_separator, '\n')) |idx|
-        column_separator[0..idx]
-    else
-        column_separator;
-    const separator_width = utils.displayWidth(separator_first_line);
+    // Get the display width of the column separator
+    const separator_width = getSeparatorWidth(box_theme);
     
     // Draw horizontal line with column junctions
     var position: usize = 0;
@@ -315,9 +345,9 @@ fn renderHeaderDivider(writer: anytype, box_theme: theme.BoxyTheme, width: usize
         // For all but the last column, we need to account for the junction
         var line_width = col_width;
         if (i < column_widths.len - 1) {
-            // If the t-junction is wider than the separator, reduce the line before it
-            if (t_down_width > separator_width) {
-                const adjustment = t_down_width - separator_width;
+            // If the cross-junction is wider than the separator, reduce the line before it
+            if (cross_width > separator_width) {
+                const adjustment = cross_width - separator_width;
                 line_width = if (col_width > adjustment) col_width - adjustment else 0;
             }
         }
@@ -328,8 +358,8 @@ fn renderHeaderDivider(writer: anytype, box_theme: theme.BoxyTheme, width: usize
         
         // Add column junction if not last column
         if (i < column_widths.len - 1) {
-            try writer.writeAll(box_theme.inner.t_down);  // T-junction where column continues down
-            position += t_down_width;  // Already calculated above
+            try writer.writeAll(box_theme.inner.cross);  // Cross junction - columns continue both up and down
+            position += cross_width;
         }
     }
     
