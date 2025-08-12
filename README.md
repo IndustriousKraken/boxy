@@ -3,21 +3,7 @@ command line program, text-based game, or even a logging system, boxy might
 be for you! Just give it tabular information and it will draw super-cool 
 padded boxes like this:
 
-╔══════════════════════════════════════════════════════════════════════╗
-║                                                                      ║
-║                  Heyyy! Look at my cool box guys!                    ║
-║                      It even has text inside!                        ║
-║                                                                      ║
-╠══════════════════════════════════════════════════════════════════════╣
-║  Groceries   │  Sock Colors   │  Creepy Dolls   │  Computer Speed    ║
-╠──────────────┼────────────────┼─────────────────┼────────────────────╣
-║  Carrots     │  Green         │  Staring baby   │  0.0021 ms         ║
-║  Tangerines  │  Red           │  Clown          │  0.0123 ms         ║
-║  Parsley     │  Blue          │  My Buddy (TM)  │  0.0647 ms         ║ 
-║  Eggplant    │  Orange        │                 │  0.1133 ms         ║
-║  Eggs        │  Tangerine     │                 │  0.8675 ms         ║
-║  Oranges     │  Parsley       │                 │  3.0900 ms         ║
-╚══════════════╧════════════════╧═════════════════╧════════════════════╝
+![A photo of a delightful box rendered in ASCII](boxy_1.png "Such a great box!")
 
 Neat huh? Boxes can be auto-sized to text, and text can be truncated to fit 
 boxes! There are also default boxy themes, and you can eeeeeasily (easily!)
