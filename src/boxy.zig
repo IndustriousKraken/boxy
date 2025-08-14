@@ -174,19 +174,6 @@ pub const BoxyBuilder = struct {
         return self;
     }
     
-    /// Create a canvas area for dynamic content
-    pub fn canvas(self: *BoxyBuilder, canvas_width: usize, canvas_height: usize) *BoxyBuilder {
-        self.sections.append(.{
-            .section_type = .canvas,
-            .orientation = self.config.orientation,
-            .headers = &.{},
-            .data = &.{}, // Canvas doesn't use data array
-            .alignment = self.config.alignment,
-        }) catch unreachable;
-        self.config.canvas_width = canvas_width;
-        self.config.canvas_height = canvas_height;
-        return self;
-    }
     
     /// Set exact, minimum, or maximum width
     pub fn width(self: *BoxyBuilder, size: Size) *BoxyBuilder {
@@ -234,6 +221,22 @@ pub const BoxyBuilder = struct {
     /// Set cell alignment (left, center, right)
     pub fn alignment(self: *BoxyBuilder, align_value: Alignment) *BoxyBuilder {
         self.config.alignment = align_value;
+        return self;
+    }
+    
+    /// Create a canvas section with specified dimensions
+    pub fn canvas(self: *BoxyBuilder, canvas_width: usize, canvas_height: usize) *BoxyBuilder {
+        // Create a canvas section - we'll actually create the canvas during build
+        const canvas_section = Section{
+            .section_type = .canvas,
+            .orientation = self.config.orientation,
+            .headers = &.{},
+            .data = &.{},
+            .alignment = self.config.alignment,
+            .canvas_width = canvas_width,
+            .canvas_height = canvas_height,
+        };
+        self.sections.append(canvas_section) catch unreachable;
         return self;
     }
     

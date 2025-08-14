@@ -32,6 +32,7 @@ pub const RenderContext = struct {
     total_width: usize,
     content_width: usize,
     layout_info: layout.LayoutInfo,
+    canvas_data: ?canvas.BoxyCanvas = null,
 };
 
 /// Options specific to table rendering
@@ -65,6 +66,7 @@ pub fn renderBox(allocator: std.mem.Allocator, boxy_box: *const box.BoxyBox) ![]
         .total_width = boxy_box.layout_info.total_width,
         .content_width = boxy_box.layout_info.content_width,
         .layout_info = boxy_box.layout_info,
+        .canvas_data = boxy_box.canvas_data,
     };
     
     // Render top border (with column junctions only if columns start at the top)
@@ -110,11 +112,6 @@ pub fn renderBox(allocator: std.mem.Allocator, boxy_box: *const box.BoxyBox) ![]
         if (section.section_type == .headers and i < boxy_box.sections.len - 1) {
             try renderHeaderDivider(writer, ctx.theme, ctx.total_width, ctx.layout_info.column_widths);
         }
-    }
-    
-    // Render canvas if present
-    if (boxy_box.canvas_data) |*canvas_data| {
-        try renderCanvas(writer, canvas_data, ctx);
     }
     
     // Render bottom border (with column junctions if there are columns)
@@ -384,7 +381,7 @@ fn renderSection(writer: anytype, section: box.Section, ctx: RenderContext) !voi
         .headers => try renderHeaderSection(writer, section, ctx),
         .data => try renderDataSection(writer, section, ctx),
         .divider => try renderDividerSection(writer, ctx),
-        .canvas => {}, // Canvas is rendered separately
+        .canvas => try renderCanvasSection(writer, section, ctx),
     }
 }
 
@@ -458,6 +455,31 @@ fn renderDataSection(writer: anytype, section: box.Section, ctx: RenderContext) 
 fn renderDividerSection(writer: anytype, ctx: RenderContext) !void {
     // Divider sections don't have columns themselves
     try renderSectionDivider(writer, ctx.theme, ctx.total_width, null);
+}
+
+/// Render a canvas section
+fn renderCanvasSection(writer: anytype, section: box.Section, ctx: RenderContext) !void {
+    if (ctx.canvas_data) |canvas_data| {
+        // Render each row of the canvas
+        for (0..canvas_data.height) |y| {
+            // Access the buffer directly since it's read-only rendering
+            const row = canvas_data.buffer[y];
+            try renderContentRow(writer, ctx.theme, ctx.total_width, row);
+        }
+    } else {
+        // If no canvas data, render empty space with the expected dimensions
+        for (0..section.canvas_height) |_| {
+            // Create an empty line of the correct width
+            var empty_line = std.ArrayList(u8).init(std.heap.page_allocator);
+            defer empty_line.deinit();
+            
+            for (0..section.canvas_width) |_| {
+                try empty_line.append(' ');
+            }
+            
+            try renderContentRow(writer, ctx.theme, ctx.total_width, empty_line.items);
+        }
+    }
 }
 
 /// Render a canvas

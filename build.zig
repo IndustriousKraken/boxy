@@ -44,6 +44,10 @@ pub fn build(b: *std.Build) void {
         .{ .name = "headless", .desc = "Table without headers" },
         .{ .name = "invoice", .desc = "Invoice with mixed content" },
         .{ .name = "multiline", .desc = "Multi-line borders example" },
+        .{ .name = "canvas_demo", .desc = "Canvas mode for dynamic content" },
+        .{ .name = "canvas_animation", .desc = "Canvas animation demo" },
+        .{ .name = "canvas_bounce", .desc = "Animated bouncing ball demo" },
+        .{ .name = "cjk_test", .desc = "CJK and emoji character width test" },
     };
 
     // Build each example

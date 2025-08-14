@@ -23,13 +23,29 @@ pub const BoxyBox = struct {
     /// Initialize a new box with arena pointer from builder
     pub fn initWithArenaPtr(allocator: std.mem.Allocator, arena_ptr: *std.heap.ArenaAllocator, config: anytype, sections: anytype) !BoxyBox {
         const arena_allocator = arena_ptr.allocator();
+        
+        // Check if any section is a canvas
+        var canvas_section: ?Section = null;
+        for (sections.items) |section| {
+            if (section.section_type == .canvas) {
+                canvas_section = section;
+                break;
+            }
+        }
+        
+        // Create canvas if needed
+        var canvas_data: ?canvas.BoxyCanvas = null;
+        if (canvas_section) |cs| {
+            canvas_data = try canvas.BoxyCanvas.init(allocator, cs.canvas_width, cs.canvas_height);
+        }
+        
         return .{
             .allocator = allocator,
             .arena_ptr = arena_ptr,
             .theme = config.theme,
             .layout_info = try layout.calculate(arena_allocator, config, sections),
             .sections = try arena_allocator.dupe(Section, sections.items),
-            .canvas_data = null,
+            .canvas_data = canvas_data,
             .rendered_cache = null,
         };
     }
@@ -192,6 +208,8 @@ pub const Section = struct {
     headers: []const []const u8,
     data: []const []const u8,
     alignment: layout.Alignment,
+    canvas_width: usize = 0,
+    canvas_height: usize = 0,
 };
 
 /// Types of sections that can exist in a box

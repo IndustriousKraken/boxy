@@ -154,13 +154,25 @@ pub const SectionType = enum {
 fn calculateNaturalColumnWidths(allocator: std.mem.Allocator, sections: anytype, cell_padding: usize) ![]usize {
     // Find the maximum number of columns from all sections
     var max_columns: usize = 0;
+    var has_canvas = false;
+    var canvas_width: usize = 0;
     
     for (sections.items) |section| {
         if (section.section_type == .headers) {
             max_columns = @max(max_columns, section.headers.len);
         } else if (section.section_type == .data) {
             max_columns = @max(max_columns, section.headers.len);
+        } else if (section.section_type == .canvas) {
+            has_canvas = true;
+            canvas_width = section.canvas_width;
         }
+    }
+    
+    // If we have a canvas section, return a single column with canvas width
+    if (has_canvas) {
+        const column_widths = try allocator.alloc(usize, 1);
+        column_widths[0] = canvas_width;
+        return column_widths;
     }
     
     // If no columns found, use default

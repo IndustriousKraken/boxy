@@ -88,7 +88,7 @@ pub const BoxyCanvas = struct {
     /// Blit a multi-line block of text at the specified position
     /// Each line is separated by \n in the input
     pub fn blitBlock(self: *BoxyCanvas, x: usize, y: usize, block: []const u8) !void {
-        var lines = std.mem.tokenize(u8, block, "\n");
+        var lines = std.mem.tokenizeScalar(u8, block, '\n');
         var current_y = y;
         
         while (lines.next()) |line| {

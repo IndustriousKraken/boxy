@@ -108,8 +108,20 @@ pub fn displayWidth(text: []const u8) usize {
                 } else {
                     width += 1;
                 }
+            } else if (text[i] == 0xE3) {
+                if (i + 2 < text.len and text[i + 1] == 0x80) {
+                    // E3 80 XX range includes CJK symbols (U+3000-U+303F)
+                    // These are typically double-width in terminals
+                    // Notable characters:
+                    // U+301C (E3 80 9C) - Wave dash 〜
+                    // U+3010-U+3011 - CJK corner brackets
+                    // Most of this range is double-width
+                    width += 2;  // CJK symbols are double-width
+                } else {
+                    width += 1;  // Other E3 sequences
+                }
             } else {
-                width += 1;  // Most 3-byte sequences are single width
+                width += 1;  // Most other 3-byte sequences are single width
             }
         } else {
             width += 1;  // ASCII and 2-byte characters
