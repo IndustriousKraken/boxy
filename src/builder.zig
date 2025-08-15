@@ -388,7 +388,7 @@ pub const BoxyBuilder = struct {
     }
     
     /// Combine columns into rows for rendering
-    fn combineColumnsIntoRows(self: *BoxyBuilder, columns: []const []const []const u8) ![]const u8 {
+    fn combineColumnsIntoRows(self: *BoxyBuilder, columns: []const []const []const u8) ![][]const u8 {
         // Find the maximum number of rows
         var max_rows: usize = 0;
         for (columns) |col| {
@@ -581,7 +581,7 @@ pub const BoxyBuilder = struct {
     }
     
     /// Create data section for spreadsheet mode
-    fn createSpreadsheetDataSection(self: *BoxyBuilder, column_sections: std.ArrayList(Section), col_headers: []const u8) !Section {
+    fn createSpreadsheetDataSection(self: *BoxyBuilder, column_sections: std.ArrayList(Section), col_headers: [][]const u8) !Section {
         // Each subsequent set: header becomes row header, data becomes row data
         const num_data_rows = column_sections.items.len - 1;
         const num_cols = col_headers.len; // Including row header column

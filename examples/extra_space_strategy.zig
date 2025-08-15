@@ -8,8 +8,8 @@ pub fn main() !void {
     const stdout = std.io.getStdOut().writer();
 
     // Create sample data
-    const columns = &[_][]const u8{ "A", "B", "C", "D", "E" };
-    const data = &[_][]const u8{ "1", "2", "3", "4", "5" };
+    _ = &[_][]const u8{ "A", "B", "C", "D", "E" };
+    _ = &[_][]const u8{ "1", "2", "3", "4", "5" };
 
     std.debug.print("=== EXTRA SPACE DISTRIBUTION STRATEGIES ===\n", .{});
     std.debug.print("When a box has a fixed width larger than its content,\n", .{});

@@ -52,6 +52,7 @@ pub fn build(b: *std.Build) void {
         .{ .name = "orientation_comparison", .desc = "Compare orientation vs spreadsheet mode" },
         .{ .name = "size_constraints", .desc = "Width constraints examples" },
         .{ .name = "extra_space_strategy", .desc = "Extra space distribution strategies" },
+        .{ .name = "height_test", .desc = "Height constraint test" },
     };
 
     // Build each example

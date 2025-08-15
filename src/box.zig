@@ -17,7 +17,7 @@ pub const BoxyBox = struct {
     theme: theme.BoxyTheme,
     layout_info: layout.LayoutInfo,
     sections: []Section,
-    canvas_data: ?canvas.BoxyCanvas,
+    canvas_data: ?*canvas.BoxyCanvas,
     rendered_cache: ?[]const u8,
     
     /// Initialize a new box with arena pointer from builder
@@ -34,9 +34,11 @@ pub const BoxyBox = struct {
         }
         
         // Create canvas if needed
-        var canvas_data: ?canvas.BoxyCanvas = null;
+        var canvas_data: ?*canvas.BoxyCanvas = null;
         if (canvas_section) |cs| {
-            canvas_data = try canvas.BoxyCanvas.init(allocator, cs.canvas_width, cs.canvas_height);
+            const canvas_ptr = try allocator.create(canvas.BoxyCanvas);
+            canvas_ptr.* = try canvas.BoxyCanvas.init(allocator, cs.canvas_width, cs.canvas_height);
+            canvas_data = canvas_ptr;
         }
         
         return .{
@@ -65,8 +67,9 @@ pub const BoxyBox = struct {
         }
         
         // Free canvas if present (might use original allocator)
-        if (self.canvas_data) |*canvas_ptr| {
+        if (self.canvas_data) |canvas_ptr| {
             canvas_ptr.deinit();
+            self.allocator.destroy(canvas_ptr);
         }
         
         // Destroy the arena - this frees EVERYTHING else in one go!
@@ -117,10 +120,7 @@ pub const BoxyBox = struct {
     
     /// Get the canvas for direct manipulation (if this box has one)
     pub fn getCanvas(self: *BoxyBox) ?*canvas.BoxyCanvas {
-        if (self.canvas_data) |*canvas_ptr| {
-            return canvas_ptr;
-        }
-        return null;
+        return self.canvas_data;
     }
     
     /// Get raw access to the rendering buffer (for advanced users)
@@ -133,7 +133,7 @@ pub const BoxyBox = struct {
     
     /// Blit text at a specific position within the content area
     pub fn blitText(self: *BoxyBox, x: usize, y: usize, text: []const u8) !void {
-        if (self.canvas_data) |*canvas_ptr| {
+        if (self.canvas_data) |canvas_ptr| {
             try canvas_ptr.blitText(x, y, text);
             // Invalidate render cache
             if (self.rendered_cache) |cache| {
@@ -145,7 +145,7 @@ pub const BoxyBox = struct {
     
     /// Blit a multi-line block of text
     pub fn blitBlock(self: *BoxyBox, x: usize, y: usize, block: []const u8) !void {
-        if (self.canvas_data) |*canvas_ptr| {
+        if (self.canvas_data) |canvas_ptr| {
             try canvas_ptr.blitBlock(x, y, block);
             // Invalidate render cache
             if (self.rendered_cache) |cache| {

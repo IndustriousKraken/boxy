@@ -32,7 +32,7 @@ pub const RenderContext = struct {
     total_width: usize,
     content_width: usize,
     layout_info: layout.LayoutInfo,
-    canvas_data: ?canvas.BoxyCanvas = null,
+    canvas_data: ?*canvas.BoxyCanvas = null,
 };
 
 /// Options specific to table rendering
@@ -51,6 +51,22 @@ fn getSeparatorWidth(box_theme: theme.BoxyTheme) usize {
     else
         separator;
     return utils.displayWidth(separator_first_line);
+}
+
+/// Helper to calculate how many lines a section will take to render
+fn getSectionLineCount(section: box.Section) usize {
+    return switch (section.section_type) {
+        .title => section.data.len + 2, // Title lines + padding
+        .headers => 1,
+        .data => if (section.headers.len > 0 and section.data.len > 0)
+            section.data.len / section.headers.len
+        else if (section.data.len > 0)
+            1  // Single row of data
+        else
+            0,
+        .divider => 1,
+        .canvas => section.canvas_height,
+    };
 }
 
 /// Render a complete box to a string

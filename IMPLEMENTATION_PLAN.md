@@ -260,26 +260,29 @@ Boxy is a focused library that does ONE thing exceptionally well: creating beaut
 - **Row Orientation** - Data can be provided as rows instead of columns with automatic transposition
 - **Size Presets** - .compact/.comfort/.spacious for consistent padding
 - **Extra Space Strategy** - Control distribution of extra space in fixed-width boxes (first/last/distributed/center)
+- **Height Constraints** - Basic exact/min/max methods (needs proper implementation - see todo #8)
 
 ### ⬜ Not Yet Implemented (Priority Order)
 
-#### High Priority - Core Functionality
-1. **Height Constraints** - Apply height constraints in layout calculation
-
 #### Medium Priority - Enhanced API
-3. **Column Width Control** - Per-column size constraints
-4. **Custom Truncation Indicators** - Beyond "..."
-5. **Coordinate System** - getCoords(), getContentArea()
-6. **Word-Aware Breaking** - Smart text wrapping
-7. **Terminal UI Context** - Advanced positioning (stub exists)
+1. **Column Width Control** - Per-column size constraints
+2. **Custom Truncation Indicators** - Beyond "..."
+3. **Coordinate System** - getCoords(), getContentArea()
+4. **Word-Aware Breaking** - Smart text wrapping
+5. **Terminal UI Context** - Advanced positioning (stub exists)
 
 #### Low Priority - Advanced Features
-10. **Theme Inheritance** - Compose themes from base themes
-11. **Hooks/Callbacks** - Pre/post render extensibility
-12. **Canvas Incremental Updates** - refreshCanvas() method implementation
-13. **Theme Registry** - Global theme management
-14. **Configuration System** - Load settings from files
-15. **Multi-canvas support** - Multiple canvases in one box
+6. **Height Constraints (Proper Implementation)** - Fix height constraint logic to:
+   - Only apply when explicitly set (not auto)
+   - Track constraint state in LayoutInfo
+   - Intelligently truncate/scroll content when constrained
+   - Support min/max/exact height with proper content clipping
+7. **Theme Inheritance** - Compose themes from base themes
+8. **Hooks/Callbacks** - Pre/post render extensibility
+9. **Canvas Incremental Updates** - refreshCanvas() method implementation
+10. **Theme Registry** - Global theme management
+11. **Configuration System** - Load settings from files
+12. **Multi-canvas support** - Multiple canvases in one box
 
 ## Success Metrics
 
@@ -295,8 +298,9 @@ The magic of Boxy is NOT in doing everything, but in doing boxes so well that ev
 
 ## Next Steps (Recommended Order)
 
-1. **Height Constraints** - Apply height constraints in layout calculation
-2. **Column Width Control** - Add per-column size constraints
-3. **Custom Truncation Indicators** - Allow customizing "..." for truncated text
+1. **Column Width Control** - Add per-column size constraints
+2. **Custom Truncation Indicators** - Allow customizing "..." for truncated text
+3. **Word-Aware Breaking** - Smart text wrapping for long content
 4. **Benchmark Performance** - Validate 100x100 table rendering speed
+5. **Height Constraints (Proper)** - Fix the implementation when explicitly set
 5. **More Examples** - Add examples for canvas animations, factory usage, and advanced layouts

@@ -322,6 +322,20 @@ pub fn calculate(allocator: std.mem.Allocator, config: anytype, sections: anytyp
         content_width += (column_widths.len - 1) * single_separator_width;
     }
     
+    // Also check title width to ensure it fits
+    var max_title_width: usize = 0;
+    for (sections.items) |section| {
+        if (section.section_type == .title) {
+            for (section.data) |title_line| {
+                const title_width = utils.displayWidth(title_line);
+                max_title_width = @max(max_title_width, title_width + 4); // Add padding
+            }
+        }
+    }
+    
+    // Content width should be at least as wide as the title
+    content_width = @max(content_width, max_title_width);
+    
     // Note: Box padding is handled separately in title sections
     // Tables don't add extra padding - columns should fill edge to edge
     const padding = Padding{};
@@ -362,24 +376,37 @@ pub fn calculate(allocator: std.mem.Allocator, config: anytype, sections: anytyp
     applyWidthConstraints(column_widths, total_width, natural_width, final_content_width, theme, config);
     
     // Calculate actual height from sections
-    var total_lines: usize = 0;
+    var content_lines: usize = 0;
     for (sections.items) |section| {
         switch (section.section_type) {
-            .title => total_lines += section.data.len + 2, // Title lines + padding
-            .headers => total_lines += 1,
+            .title => content_lines += section.data.len + 2, // Title lines + padding
+            .headers => content_lines += 1,
             .data => {
                 if (section.headers.len > 0 and section.data.len > 0) {
-                    total_lines += section.data.len / section.headers.len;
+                    content_lines += section.data.len / section.headers.len;
                 }
             },
-            .divider => total_lines += 1,
-            .canvas => {}, // Canvas height handled separately
+            .divider => content_lines += 1,
+            .canvas => content_lines += section.canvas_height,
         }
     }
     
-    // Add borders and dividers
-    const total_height = total_lines + 4; // Top border + bottom border + header divider + padding
-    const content_height = total_lines;
+    // Calculate natural height including borders
+    // Top border (1) + content + bottom border (1) + potential header divider (1) + padding
+    const border_height = 2; // Top and bottom borders
+    const natural_height = content_lines + border_height + 2; // +2 for potential dividers/padding
+    
+    // Apply height constraint from config
+    const height_constraint = if (@hasField(@TypeOf(config), "height")) config.height else Size{ .auto = {} };
+    const total_height = height_constraint.constrain(natural_height);
+    
+    // Calculate content height based on whether we have a constraint
+    const content_height = if (height_constraint == .auto)
+        content_lines  // Use natural content height when unconstrained
+    else if (total_height > border_height)
+        total_height - border_height  // Only subtract borders when constrained
+    else
+        1;  // Minimum content height
     
     return .{
         .total_width = total_width,
