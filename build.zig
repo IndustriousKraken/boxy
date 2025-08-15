@@ -48,6 +48,10 @@ pub fn build(b: *std.Build) void {
         .{ .name = "canvas_animation", .desc = "Canvas animation demo" },
         .{ .name = "canvas_bounce", .desc = "Animated bouncing ball demo" },
         .{ .name = "cjk_test", .desc = "CJK and emoji character width test" },
+        .{ .name = "row_orientation", .desc = "Row orientation examples" },
+        .{ .name = "orientation_comparison", .desc = "Compare orientation vs spreadsheet mode" },
+        .{ .name = "size_constraints", .desc = "Width constraints examples" },
+        .{ .name = "extra_space_strategy", .desc = "Extra space distribution strategies" },
     };
 
     // Build each example

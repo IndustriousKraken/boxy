@@ -1,7 +1,7 @@
 # Boxy Implementation Plan
 
-> **Last Updated**: 2025-08-12  
-> **Status**: Active Development - Phase 3 Complete, Phase 2/5 Partial, Spreadsheet Mode Complete
+> **Last Updated**: 2025-08-14  
+> **Status**: Active Development - Phases 1, 3, 4 Complete | Phase 2, 5 Partial | Canvas & Factory Implemented
 
 ## Core Philosophy
 Boxy is a focused library that does ONE thing exceptionally well: creating beautiful text boxes for terminal applications. It is composable, not comprehensive - providing primitives that others can build upon rather than trying to be a complete framework.
@@ -205,9 +205,9 @@ Boxy is a focused library that does ONE thing exceptionally well: creating beaut
 3. ✅ Single box with fixed content
 4. ✅ Basic print() functionality
 
-### Phase 2: Layout Engine 🚧 PARTIAL
-1. ⬜ Column/row orientation (only columns done)
-2. ⬜ Size constraints (only .exact() implemented)
+### Phase 2: Layout Engine ✅ DONE
+1. ✅ Column/row orientation (both implemented with automatic transposition)
+2. ✅ Size constraints (exact/min/max/range all implemented with builder methods)
 3. ✅ Text alignment
 4. ✅ Multi-section boxes
 
@@ -217,14 +217,14 @@ Boxy is a focused library that does ONE thing exceptionally well: creating beaut
 3. ✅ Inner vs. outer borders
 4. ✅ Border themes (13 themes implemented)
 
-### Phase 4: Canvas System ⬜ NOT STARTED
-1. ⬜ Canvas creation
-2. ⬜ Blit operations
-3. ⬜ Partial refresh
-4. ⬜ Raw buffer access
+### Phase 4: Canvas System ✅ DONE
+1. ✅ Canvas creation (BoxyCanvas with init/deinit)
+2. ✅ Blit operations (blitText, blitBlock, blitCanvas)
+3. ✅ Partial refresh (dirty flag tracking)
+4. ✅ Raw buffer access (getRawBuffer, getRow)
 
 ### Phase 5: Factory and Themes 🚧 PARTIAL
-1. ⬜ Factory pattern
+1. ✅ Factory pattern (BoxyFactory implemented with .new() method)
 2. ⬜ Theme registry
 3. ✅ Preset themes (13 themes)
 4. ⬜ Configuration system
@@ -252,35 +252,40 @@ Boxy is a focused library that does ONE thing exceptionally well: creating beaut
 - Named constants for maintainability
 - **Spreadsheet mode** - First .set() becomes columns, rest become rows with row headers
 - Organized build system separating library from examples
+- **Canvas System** - Full implementation with blitting, drawing primitives, and dirty tracking
+- **Factory Pattern** - BoxyFactory for reusable configurations
+- **Size Constraints** - Complete width control with exact/min/max/range methods
+- Arena allocator for efficient memory management
+- Canvas view/sub-canvas support for windowing
+- **Row Orientation** - Data can be provided as rows instead of columns with automatic transposition
+- **Size Presets** - .compact/.comfort/.spacious for consistent padding
+- **Extra Space Strategy** - Control distribution of extra space in fixed-width boxes (first/last/distributed/center)
 
 ### ⬜ Not Yet Implemented (Priority Order)
 
 #### High Priority - Core Functionality
-1. ✅ **Spreadsheet Mode** - First column becomes row headers (COMPLETE!)
-2. **Canvas Mode** - Dynamic content area for games/animations
-3. **Factory Pattern** - Reusable box configurations
-4. **Size Constraints** - width/height with min/max/exact/range (partial - only .exact() done)
-5. **Row Orientation** - Transpose data from rows to columns
+1. **Height Constraints** - Apply height constraints in layout calculation
 
 #### Medium Priority - Enhanced API
-6. **Column Width Control** - Per-column size constraints
-7. **Size Presets** - .compact/.comfort/.spacious shortcuts
-8. **Custom Truncation Indicators** - Beyond "..."
-9. **Coordinate System** - getCoords(), getContentArea()
-10. **Word-Aware Breaking** - Smart text wrapping
+3. **Column Width Control** - Per-column size constraints
+4. **Custom Truncation Indicators** - Beyond "..."
+5. **Coordinate System** - getCoords(), getContentArea()
+6. **Word-Aware Breaking** - Smart text wrapping
+7. **Terminal UI Context** - Advanced positioning (stub exists)
 
 #### Low Priority - Advanced Features
-11. **Theme Inheritance** - Compose themes from base themes
-12. **Hooks/Callbacks** - Pre/post render extensibility
-13. **Incremental Updates** - Refresh only changed content
-14. **Theme Registry** - Global theme management
-15. **Configuration System** - Load settings from files
+10. **Theme Inheritance** - Compose themes from base themes
+11. **Hooks/Callbacks** - Pre/post render extensibility
+12. **Canvas Incremental Updates** - refreshCanvas() method implementation
+13. **Theme Registry** - Global theme management
+14. **Configuration System** - Load settings from files
+15. **Multi-canvas support** - Multiple canvases in one box
 
 ## Success Metrics
 
 - **API Simplicity**: ✅ Can create a box in < 5 lines
 - **Performance**: ❓ Not yet benchmarked for 100x100 tables
-- **Flexibility**: 🚧 Needs canvas mode for game UIs
+- **Flexibility**: ✅ Canvas mode implemented for game UIs
 - **Reliability**: ✅ No panics in current implementation
 - **Size**: ✅ Zero dependencies, small footprint
 
@@ -290,8 +295,8 @@ The magic of Boxy is NOT in doing everything, but in doing boxes so well that ev
 
 ## Next Steps (Recommended Order)
 
-1. **Add Canvas System** - Unlocks game/animation use cases
-2. **Factory Pattern** - Improves API ergonomics significantly  
-3. **Complete Size Constraints** - Add min/max/range (exact already works)
-4. **Row Orientation** - Allow data to be provided as rows instead of columns
-5. **Benchmark Performance** - Validate 100x100 table rendering speed
+1. **Height Constraints** - Apply height constraints in layout calculation
+2. **Column Width Control** - Add per-column size constraints
+3. **Custom Truncation Indicators** - Allow customizing "..." for truncated text
+4. **Benchmark Performance** - Validate 100x100 table rendering speed
+5. **More Examples** - Add examples for canvas animations, factory usage, and advanced layouts

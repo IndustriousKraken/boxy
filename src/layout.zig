@@ -6,6 +6,7 @@
 
 const std = @import("std");
 const utils = @import("utils.zig");
+const constants = @import("constants.zig");
 
 /// Get the display width of a theme's column separator (first line only)
 fn getSeparatorWidth(theme_obj: anytype) usize {
@@ -17,20 +18,8 @@ fn getSeparatorWidth(theme_obj: anytype) usize {
     return utils.displayWidth(separator_first_line);
 }
 
-/// Configuration constants
-pub const Constants = struct {
-    /// Default width for columns when no content is available
-    pub const DEFAULT_COLUMN_WIDTH = 10;
-    
-    /// Minimum width for displaying truncated text with ellipsis
-    pub const MIN_TRUNCATE_WIDTH = 3;
-    
-    /// Default cell padding on each side
-    pub const DEFAULT_CELL_PADDING = 1;
-    
-    /// Extra rows allocated for headers and padding  
-    pub const EXTRA_ROW_BUFFER = 5;
-};
+/// Re-export layout constants for backward compatibility
+pub const Constants = constants.Layout;
 
 /// Orientation for data layout
 pub const Orientation = enum {
@@ -266,8 +255,8 @@ fn applyWidthConstraints(column_widths: []usize, total_width: usize, natural_wid
                     }
                 },
                 .distributed => {
-                    // Already handled by width_per_column; 
-                    // for true distribution we'd spread more evenly
+                    // Distribute extra width evenly across all columns
+                    // Use modulo to distribute remainder pixels
                     if (i < extra_width) {
                         width.* += 1;
                     }

@@ -44,6 +44,24 @@ fn myCoolProgram() void {
 
 Fun, right? Your data stays organized in logical sets, and Boxy handles the layout!
 
+Need to organize your data differently? Use row orientation:
+
+```zig
+fn myRowBasedTable() void {
+  // With row orientation, each .set() adds a row instead of a column!
+  var sales = try Boxy.new(allocator)
+    .orientation(.rows)  // Switch to row mode
+    .set("Product", &.{ "Q1", "Q2", "Q3", "Q4" })   // First row
+    .set("Apples", &.{ "100", "120", "115", "130" }) // Second row
+    .set("Oranges", &.{ "80", "90", "95", "110" })   // Third row
+    .style(.pipes)
+    .build();
+  defer sales.deinit(allocator);
+  
+  // Prints a table with products as rows and quarters as columns!
+}
+```
+
 Want to make a spreadsheet? Easy!
 
 ```zig
@@ -129,21 +147,44 @@ Control your box dimensions and text layout:
 
 ```zig
 var box = try Boxy.new(allocator)
-    .width(.{ .exact = 80 })        // Exactly 80 chars wide
-    .height(.{ .min = 10 })          // At least 10 lines tall
-    .columnWidth("Name", .{ .max = 20 })  // Truncate long names
-    .align(.center)                  // Center all text
-    .truncate("...")                 // Custom truncation indicator
+    .exact(80)              // Exactly 80 chars wide
+    .min(50)                // At least 50 chars wide  
+    .max(100)               // At most 100 chars wide
+    .range(40, 80)          // Between 40 and 80 chars
+    .alignment(.center)     // Center all text
     .build();
 ```
 
-Or use simple presets:
+Or use the generic width() method for full control:
+```zig
+.width(.{ .exact = 80 })        // Exactly 80 chars wide
+.width(.{ .min = 50 })          // At least 50 chars wide
+.width(.{ .max = 100 })         // At most 100 chars wide
+.width(.{ .range = .{ .min = 40, .max = 80 } })  // Range constraint
+```
+
+Apply size presets for consistent spacing:
 
 ```zig
-.size(.compact)    // Minimal padding, tight fit
-.size(.comfort)    // Nice readable spacing (default)
-.size(.spacious)   // Generous padding
+.size(.compact)    // No padding for tight layouts
+.size(.comfort)    // Default padding (1 space)
+.size(.spacious)   // Extra padding (2 spaces)
 ```
+
+Control how extra space is distributed in fixed-width boxes:
+
+```zig
+var box = try Boxy.new(allocator)
+    .exact(80)                          // Fixed width
+    .extraSpaceStrategy(.distributed)   // Spread extra space evenly
+    .build();
+```
+
+Available strategies:
+- `.first` - Extra space goes to first columns (default for spreadsheet mode)
+- `.last` - Extra space goes to last columns (default for regular tables)
+- `.distributed` - Spread extra space evenly across all columns
+- `.center` - Extra space goes to center columns
 
 ## Canvas Mode - For Games and Dynamic Content
 
