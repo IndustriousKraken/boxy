@@ -53,6 +53,8 @@ pub fn build(b: *std.Build) void {
         .{ .name = "size_constraints", .desc = "Width constraints examples" },
         .{ .name = "extra_space_strategy", .desc = "Extra space distribution strategies" },
         .{ .name = "height_test", .desc = "Height constraint test" },
+        .{ .name = "test_junctions", .desc = "Test junction characters" },
+        .{ .name = "test_junctions_no_title", .desc = "Test junctions without title" },
     };
 
     // Build each example

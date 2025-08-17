@@ -10,7 +10,7 @@ const constants = @import("constants.zig");
 
 /// Get the display width of a theme's column separator (first line only)
 fn getSeparatorWidth(theme_obj: anytype) usize {
-    const separator = theme_obj.inner.v;
+    const separator = theme_obj.vertical.column;
     const separator_first_line = if (std.mem.indexOfScalar(u8, separator, '\n')) |idx|
         separator[0..idx]
     else

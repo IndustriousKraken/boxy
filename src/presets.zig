@@ -1,8 +1,7 @@
-/// Built-in themes and style presets for Boxy
+/// Built-in themes and style presets for Boxy - Systematic structure
 ///
-/// This module contains pre-defined themes that users can apply to their boxes
-/// for consistent, professional-looking output. Themes range from simple ASCII
-/// to Unicode box-drawing characters to fun decorative styles.
+/// This module contains pre-defined themes using the systematic structure
+/// where all characters are aligned in columns for easy comparison
 
 const theme = @import("theme.zig");
 
@@ -15,7 +14,7 @@ pub const StylePreset = enum {
     bold,        // Bold lines: ━ ┃ ┏ ┓ ┗ ┛
     dotted,      // Dotted style: ⋯ ⋮ 
     ascii,       // Pure ASCII: - | + +
-    tribal,      // Because why not?
+    tribal,      // Decorative style
     minimal,     // Spaces only
     retro,       // Retro terminal: ▀ ▄ █ ▐
     festive,     // Holiday themed
@@ -28,20 +27,20 @@ pub const StylePreset = enum {
 /// Get a theme by preset name
 pub fn getTheme(preset: StylePreset) theme.BoxyTheme {
     return switch (preset) {
-        .simple   => simple_theme,
-        .pipes    => pipes_theme,
-        .rounded  => rounded_theme,
-        .double   => double_theme,
-        .bold     => bold_theme,
-        .dotted   => dotted_theme,
-        .ascii    => ascii_theme,
-        .tribal   => tribal_theme,
-        .minimal  => minimal_theme,
-        .retro    => retro_theme,
-        .festive  => festive_theme,
-        .neon     => neon_theme,
-        .wooden   => wooden_theme,
-        .grid     => grid_theme,
+        .simple      => simple_theme,
+        .pipes       => pipes_theme,
+        .rounded     => rounded_theme,
+        .double      => double_theme,
+        .bold        => bold_theme,
+        .dotted      => dotted_theme,
+        .ascii       => ascii_theme,
+        .tribal      => tribal_theme,
+        .minimal     => minimal_theme,
+        .retro       => retro_theme,
+        .festive     => festive_theme,
+        .neon        => neon_theme,
+        .wooden      => wooden_theme,
+        .grid        => grid_theme,
         .spreadsheet => spreadsheet_theme,
     };
 }
@@ -50,405 +49,471 @@ pub fn getTheme(preset: StylePreset) theme.BoxyTheme {
 pub const default_theme = pipes_theme;
 
 /// Simple ASCII theme using basic characters
+/// Uses only ASCII characters: - | +
 pub const simple_theme = theme.BoxyTheme{
-    .h_border = "-",
-    .v_border = "|",
-    .tl = "+",
-    .tr = "+",
-    .bl = "+",
-    .br = "+",
-    .inner = .{
-        .h = "-",
-        .v = "|",
-        .section = "-",
-        .cross = "+",
-        .t_down = "+",
-        .t_up = "+",
-        .t_right = "+",
-        .t_left = "+",
+    .vertical = .{
+        .outer                      = "|",
+        .column                     = "|",
+    },
+    .horizontal = .{
+        .outer                      = "-",
+        .section                    = "-",
+        .header                     = "-",
+        .row                        = null,
     },
     .junction = .{
-        .top = "+",
-        .bottom = "+",
-        .left = "+",
-        .right = "+",
+        .outer_corner               = "+",
+        
+        .outer_section_t_left       = "+",
+        .outer_section_t_right      = "+",
+        .outer_header_t_left        = "+",
+        .outer_header_t_right       = "+",
+        
+        .outer_column_t_up          = "+",
+        .outer_column_t_down        = "+",
+        
+        .section_column_t_down      = "+",
+        .header_column_cross        = "+",
     },
 };
 
-/// Classic pipes theme (the example from README)
+/// Classic pipes theme with double-line outer borders
+/// Uses double lines for borders, single lines for inner dividers
 pub const pipes_theme = theme.BoxyTheme{
-    .h_border = "═",
-    .v_border = "║",
-    .tl = "╔",
-    .tr = "╗",
-    .bl = "╚",
-    .br = "╝",
-    .inner = .{
-        .h = "─",
-        .v = "│",
-        .section = "═",
-        .cross = "┼",
-        .t_down = "╤",
-        .t_up = "╧",
-        .t_right = "╟",
-        .t_left = "╢",
+    .vertical = .{
+        .outer                      = "║",
+        .column                     = "│",
+    },
+    .horizontal = .{
+        .outer                      = "═",
+        .section                    = "═",
+        .header                     = "─",
+        .row                        = null,
     },
     .junction = .{
-        .top = "╤",
-        .bottom = "╧",
-        .left = "╠",
-        .right = "╣",
+        .outer_top_left             = "╔",
+        .outer_top_right            = "╗",
+        .outer_bottom_left          = "╚",
+        .outer_bottom_right         = "╝",
+        
+        .outer_section_t_left       = "╣",
+        .outer_section_t_right      = "╠",
+        .outer_header_t_left        = "╢",
+        .outer_header_t_right       = "╟",
+        
+        .outer_column_t_up          = "╧",
+        .outer_column_t_down        = "╤",
+        
+        .section_column_t_down      = "╤",
+        .header_column_cross        = "┼",
     },
 };
 
-/// Rounded corners theme
+/// Rounded corners theme with softer appearance
+/// Uses single lines with rounded corners
 pub const rounded_theme = theme.BoxyTheme{
-    .h_border = "─",
-    .v_border = "│",
-    .tl = "╭",
-    .tr = "╮",
-    .bl = "╰",
-    .br = "╯",
-    .inner = .{
-        .h = "─",
-        .v = "│",
-        .section = "─",
-        .cross = "┼",
-        .t_down = "┬",
-        .t_up = "┴",
-        .t_right = "├",
-        .t_left = "┤",
+    .vertical = .{
+        .outer                      = "│",
+        .column                     = "│",
+    },
+    .horizontal = .{
+        .outer                      = "─",
+        .section                    = "─",
+        .header                     = "─",
+        .row                        = null,
     },
     .junction = .{
-        .top = "┬",
-        .bottom = "┴",
-        .left = "├",
-        .right = "┤",
+        .outer_top_left             = "╭",
+        .outer_top_right            = "╮",
+        .outer_bottom_left          = "╰",
+        .outer_bottom_right         = "╯",
+        
+        .outer_section_t_left       = "┤",
+        .outer_section_t_right      = "├",
+        .outer_header_t_left        = "┤",
+        .outer_header_t_right       = "├",
+        
+        .outer_column_t_up          = "┴",
+        .outer_column_t_down        = "┬",
+        
+        .section_column_t_down      = "┬",
+        .header_column_cross        = "┼",
     },
 };
 
-/// Double line theme
+/// Double line theme - all double lines
+/// Uses double lines throughout
 pub const double_theme = theme.BoxyTheme{
-    .h_border = "═",
-    .v_border = "║",
-    .tl = "╔",
-    .tr = "╗",
-    .bl = "╚",
-    .br = "╝",
-    .inner = .{
-        .h = "═",
-        .v = "║",
-        .section = "═",
-        .cross = "╬",
-        .t_down = "╦",
-        .t_up = "╩",
-        .t_right = "╠",
-        .t_left = "╣",
+    .vertical = .{
+        .outer                      = "║",
+        .column                     = "║",
+    },
+    .horizontal = .{
+        .outer                      = "═",
+        .section                    = "═",
+        .header                     = "═",
+        .row                        = null,
     },
     .junction = .{
-        .top = "╦",
-        .bottom = "╩",
-        .left = "╠",
-        .right = "╣",
+        .outer_top_left             = "╔",
+        .outer_top_right            = "╗",
+        .outer_bottom_left          = "╚",
+        .outer_bottom_right         = "╝",
+        
+        .outer_section_t_left       = "╣",
+        .outer_section_t_right      = "╠",
+        .outer_header_t_left        = "╣",
+        .outer_header_t_right       = "╠",
+        
+        .outer_column_t_up          = "╩",
+        .outer_column_t_down        = "╦",
+        
+        .section_column_t_down      = "╦",
+        .header_column_cross        = "╬",
     },
 };
 
-/// Bold line theme
+/// Bold line theme - heavy strokes
+/// Uses bold/heavy box drawing characters
 pub const bold_theme = theme.BoxyTheme{
-    .h_border = "━",
-    .v_border = "┃",
-    .tl = "┏",
-    .tr = "┓",
-    .bl = "┗",
-    .br = "┛",
-    .inner = .{
-        .h = "━",
-        .v = "┃",
-        .section = "━",
-        .cross = "╋",
-        .t_down = "┳",
-        .t_up = "┻",
-        .t_right = "┣",
-        .t_left = "┫",
+    .vertical = .{
+        .outer                      = "┃",
+        .column                     = "┃",
+    },
+    .horizontal = .{
+        .outer                      = "━",
+        .section                    = "━",
+        .header                     = "━",
+        .row                        = null,
     },
     .junction = .{
-        .top = "┳",
-        .bottom = "┻",
-        .left = "┣",
-        .right = "┫",
+        .outer_top_left             = "┏",
+        .outer_top_right            = "┓",
+        .outer_bottom_left          = "┗",
+        .outer_bottom_right         = "┛",
+        
+        .outer_section_t_left       = "┫",
+        .outer_section_t_right      = "┣",
+        .outer_header_t_left        = "┫",
+        .outer_header_t_right       = "┣",
+        
+        .outer_column_t_up          = "┻",
+        .outer_column_t_down        = "┳",
+        
+        .section_column_t_down      = "┳",
+        .header_column_cross        = "╋",
     },
 };
 
-/// Dotted theme
-pub const dotted_theme = theme.BoxyTheme{
-    .h_border = "⋯",
-    .v_border = "⋮",
-    .tl = "·",
-    .tr = "·",
-    .bl = "·",
-    .br = "·",
-    .inner = .{
-        .h = "⋯",
-        .v = "⋮",
-        .section = "⋯",
-        .cross = "·",
-        .t_down = "·",
-        .t_up = "·",
-        .t_right = "·",
-        .t_left = "·",
-    },
-    .junction = .{
-        .top = "·",
-        .bottom = "·",
-        .left = "·",
-        .right = "·",
-    },
-};
-
-/// Pure ASCII theme (no extended characters)
+/// Pure ASCII theme with double-thick borders
+/// Uses multi-line borders for thickness effect
 pub const ascii_theme = theme.BoxyTheme{
-    .h_border = "=",
-    .v_border = "||\n||", // Same # characters on each line, use empty spaces. 
-    .tl = "++",
-    .tr = "++",
-    .bl = "++",
-    .br = "++",
-    .inner = .{
-        .h = "-",
-        .v = "|\n|",
-        .section = "=",
-        .cross = "+",
-        .t_down = "+",
-        .t_up = "+",
-        .t_right = "+",
-        .t_left = "+",
+    .vertical = .{
+        .outer                      = "||\n||",
+        .column                     = "|\n|",
+    },
+    .horizontal = .{
+        .outer                      = "==",
+        .section                    = "==",
+        .header                     = "--",
+        .row                        = null,
     },
     .junction = .{
-        .top    = "+",
-        .bottom = "+",
-        .left   = "||",
-        .right  = "||",
+        .outer_corner               = "++",
+        
+        .outer_section_t_left       = "||",
+        .outer_section_t_right      = "||",
+        .outer_header_t_left        = "+",
+        .outer_header_t_right       = "+",
+        
+        .outer_column_t_up          = "+",
+        .outer_column_t_down        = "+",
+        
+        .section_column_t_down      = "+",
+        .header_column_cross        = "+",
     },
 };
 
-/// Ancestors, hear me!
-pub const tribal_theme = theme.BoxyTheme{
-    .h_border = "=-=",
-    .v_border = "\\/\n/\\", // Same # characters on each line, use empty spaces. 
-    .tl = "oo",
-    .tr = "oo",
-    .bl = "oo",
-    .br = "oo",
-    .inner = .{
-        .h = "…",
-        .v = "::\n::",
-        .section = "…",
-        .cross   = "……",
-        .t_down  = "……",
-        .t_up    = "::",
-        .t_right = "…",
-        .t_left  = "…",
-    },
-    .junction = .{
-        .top    = "✴✴",
-        .bottom = "✴✴",
-        .left   = "oo",
-        .right  = "oo",
-    },
-};
-
-/// Minimal theme (mostly spaces)
-pub const minimal_theme = theme.BoxyTheme{
-    .h_border = " ",
-    .v_border = " ",
-    .tl = " ",
-    .tr = " ",
-    .bl = " ",
-    .br = " ",
-    .inner = .{
-        .h = " ",
-        .v = " ",
-        .section = "-",
-        .cross = " ",
-        .t_down = " ",
-        .t_up = " ",
-        .t_right = " ",
-        .t_left = " ",
-    },
-    .junction = .{
-        .top = " ",
-        .bottom = " ",
-        .left = " ",
-        .right = " ",
-    },
-};
-
-/// Retro terminal theme
-pub const retro_theme = theme.BoxyTheme{
-    .top = "▀",
-    .bottom = "▄",
-    .left = "▌",
-    .right = "▐",
-    .tl = "▛",
-    .tr = "▜",
-    .bl = "▙",
-    .br = "▟",
-    .inner = .{
-        .h = "─",
-        .v = "│",
-        .section = "═",
-        .cross = "┼",
-    },
-    .junction = .{
-        .top = "▀",
-        .bottom = "▄",
-        .left = "▌",
-        .right = "▐",
-    },
-};
-
-/// Festive/holiday theme
-pub const festive_theme = theme.BoxyTheme{
-    .h_border = "~*~",
-    .v_border = "║",
-    .tl = "◢",
-    .tr = "◣",
-    .bl = "◥",
-    .br = "◤",
-    .inner = .{
-        .h = "~",
-        .v = "|",
-        .section = "~*~",
-        .cross = "*",
-    },
-    .junction = .{
-        .top = "*",
-        .bottom = "*",
-        .left = "*",
-        .right = "*",
-    },
-};
-
-/// Neon/cyberpunk theme
-pub const neon_theme = theme.BoxyTheme{
-    .h_border = "◊◊◊",
-    .v_border = "◊\n◊",
-    .tl = "◊",
-    .tr = "◊",
-    .bl = "◊",
-    .br = "◊",
-    .inner = .{
-        .h = "─",
-        .v = "│\n│",
-        .section = "═",
-        .cross = "◊",
-    },
-    .junction = .{
-        .top = "◊",
-        .bottom = "◊",
-        .left = "◊",
-        .right = "◊",
-    },
-};
-
-/// Wooden crate theme
-pub const wooden_theme = theme.BoxyTheme{
-    .h_border = "[=]",
-    .v_border = "[|]",
-    .tl = "[╔]",
-    .tr = "[╗]",
-    .bl = "[╚]",
-    .br = "[╝]",
-    .inner = .{
-        .h = "---",
-        .v = " | ",
-        .section = "[=]",
-        .cross = "-|-",
-    },
-    .junction = .{
-        .top = "[T]",
-        .bottom = "[⊥]",
-        .left = "[├]",
-        .right = "[┤]",
-    },
-};
-
-/// Shadow box theme (3D effect)
-pub const shadow_theme = theme.BoxyTheme{
-    .top = "▀",
-    .bottom = "▄▄▄░",
-    .left = "█",
-    .right = "█▓",
-    .tl = "▛",
-    .tr = "▜▓",
-    .bl = "▙",
-    .br = "▟░",
-    .inner = .{
-        .h = "─",
-        .v = "│",
-        .section = "═",
-        .cross = "┼",
-    },
-};
-
-/// Full grid theme (like a spreadsheet with all lines)
+/// Full grid theme with row dividers
+/// Shows all grid lines including between data rows
 pub const grid_theme = theme.BoxyTheme{
-    .h_border = "─",
-    .v_border = "│",
-    .tl = "┌",
-    .tr = "┐",
-    .bl = "└",
-    .br = "┘",
-    .inner = .{
-        .h = "─",
-        .v = "│",
-        .section = "─",
-        .cross = "┼",
-        .t_down = "┬",
-        .t_up = "┴",
-        .t_right = "├",
-        .t_left = "┤",
-        // Row dividers for full grid
-        .row_divider = "─",
-        .row_cross = "┼",
-        .row_left = "├",
-        .row_right = "┤",
+    .vertical = .{
+        .outer                      = "│",
+        .column                     = "│",
+    },
+    .horizontal = .{
+        .outer                      = "─",
+        .section                    = "─",
+        .header                     = "─",
+        .row                        = "─",
     },
     .junction = .{
-        .top = "┬",
-        .bottom = "┴",
-        .left = "├",
-        .right = "┤",
+        .outer_top_left             = "┌",
+        .outer_top_right            = "┐",
+        .outer_bottom_left          = "└",
+        .outer_bottom_right         = "┘",
+        
+        .outer_section_t_left       = "┤",
+        .outer_section_t_right      = "├",
+        .outer_header_t_left        = "┤",
+        .outer_header_t_right       = "├",
+        .outer_row_t_left           = "┤",
+        .outer_row_t_right          = "├",
+        
+        .outer_column_t_up          = "┴",
+        .outer_column_t_down        = "┬",
+        
+        .section_column_t_down      = "┬",
+        .header_column_cross        = "┼",
+        .row_column_cross           = "┼",
     },
 };
 
-/// Light spreadsheet theme (subtle grid lines)
+/// Spreadsheet theme with mixed styles
+/// Double outer borders, single inner, light row dividers
 pub const spreadsheet_theme = theme.BoxyTheme{
-    .h_border = "═",
-    .v_border = "║",
-    .tl = "╔",
-    .tr = "╗",
-    .bl = "╚",
-    .br = "╝",
-    .inner = .{
-        .h = "─",
-        .v = "│",
-        .section = "═",
-        .cross = "┼",
-        .t_down = "╤",  // Match double-line style
-        .t_up = "╧",
-        .t_right = "╟",
-        .t_left = "╢",
-        // Light row dividers
-        .row_divider = "…",
-        .row_cross = "│",
-        .row_left = "║",
-        .row_right = "║",
+    .vertical = .{
+        .outer                      = "║",
+        .column                     = "│",
+    },
+    .horizontal = .{
+        .outer                      = "═",
+        .section                    = "═",
+        .header                     = "─",
+        .row                        = "…",
     },
     .junction = .{
-        .top = "╤",     // Match double-line style
-        .bottom = "╧",
-        .left = "╠",
-        .right = "╣",
+        .outer_top_left             = "╔",
+        .outer_top_right            = "╗",
+        .outer_bottom_left          = "╚",
+        .outer_bottom_right         = "╝",
+        
+        .outer_section_t_left       = "╣",
+        .outer_section_t_right      = "╠",
+        .outer_header_t_left        = "╢",
+        .outer_header_t_right       = "╟",
+        .outer_row_t_left           = "║",  // Row divider blends into border
+        .outer_row_t_right          = "║",  // Row divider blends into border
+        
+        .outer_column_t_up          = "╧",
+        .outer_column_t_down        = "╤",
+        
+        .section_column_t_down      = "╤",
+        .header_column_cross        = "┼",
+        .row_column_cross           = "│",  // Light - column continues through
+    },
+};
+
+/// Dotted theme using Unicode dot characters
+/// Creates a softer, less defined appearance
+pub const dotted_theme = theme.BoxyTheme{
+    .vertical = .{
+        .outer                      = "⋮",
+        .column                     = "⋮",
+    },
+    .horizontal = .{
+        .outer                      = "⋯",
+        .section                    = "⋯",
+        .header                     = "⋯",
+        .row                        = null,
+    },
+    .junction = .{
+        .outer_corner               = "·",
+        
+        .outer_section_t_left       = "·",
+        .outer_section_t_right      = "·",
+        .outer_header_t_left        = "·",
+        .outer_header_t_right       = "·",
+        
+        .outer_column_t_up          = "·",
+        .outer_column_t_down        = "·",
+        
+        .section_column_t_down      = "·",
+        .header_column_cross        = "·",
+    },
+};
+
+/// Tribal theme with decorative patterns
+/// Uses multi-line borders for a unique look
+pub const tribal_theme = theme.BoxyTheme{
+    .vertical = .{
+        .outer                      = "\\/\n/\\",
+        .column                     = "::\n::",
+    },
+    .horizontal = .{
+        .outer                      = "=-=",
+        .section                    = "=-=",
+        .header                     = "…",
+        .row                        = null,
+    },
+    .junction = .{
+        .outer_corner               = "oo",
+        
+        .outer_section_t_left       = "oo",
+        .outer_section_t_right      = "oo",
+        .outer_header_t_left        = "…",
+        .outer_header_t_right       = "…",
+        
+        .outer_column_t_up          = "✴✴",
+        .outer_column_t_down        = "✴✴",
+        
+        .section_column_t_down      = "……",
+        .header_column_cross        = "……",
+    },
+};
+
+/// Minimal theme - mostly spaces
+/// For when you want structure without visual noise
+pub const minimal_theme = theme.BoxyTheme{
+    .vertical = .{
+        .outer                      = " ",
+        .column                     = " ",
+    },
+    .horizontal = .{
+        .outer                      = " ",
+        .section                    = "-",
+        .header                     = " ",
+        .row                        = null,
+    },
+    .junction = .{
+        .outer_corner               = " ",
+        
+        .outer_section_t_left       = " ",
+        .outer_section_t_right      = " ",
+        .outer_header_t_left        = " ",
+        .outer_header_t_right       = " ",
+        
+        .outer_column_t_up          = " ",
+        .outer_column_t_down        = " ",
+        
+        .section_column_t_down      = " ",
+        .header_column_cross        = " ",
+    },
+};
+
+/// Retro terminal theme with block characters
+/// Evokes old-school terminal aesthetics
+pub const retro_theme = theme.BoxyTheme{
+    .vertical = .{
+        .outer_left                 = "▌",
+        .outer_right                = "▐",
+        .column                     = "│",
+    },
+    .horizontal = .{
+        .outer_top                  = "▀",
+        .outer_bottom                = "▄",
+        .section                    = "═",
+        .header                     = "─",
+        .row                        = null,
+    },
+    .junction = .{
+        .outer_top_left             = "▛",
+        .outer_top_right            = "▜",
+        .outer_bottom_left          = "▙",
+        .outer_bottom_right         = "▟",
+        
+        .outer_section_t_left       = "▐",
+        .outer_section_t_right      = "▌",
+        .outer_header_t_left        = "▐",
+        .outer_header_t_right       = "▌",
+        
+        .outer_column_t_up          = "▄",
+        .outer_column_t_down        = "▀",
+        
+        .section_column_t_down      = "┬",
+        .header_column_cross        = "┼",
+    },
+};
+
+/// Festive/holiday theme with decorative elements
+/// Fun and whimsical appearance
+pub const festive_theme = theme.BoxyTheme{
+    .vertical = .{
+        .outer                      = "║",
+        .column                     = "|",
+    },
+    .horizontal = .{
+        .outer                      = "~*~",
+        .section                    = "~*~",
+        .header                     = "~",
+        .row                        = null,
+    },
+    .junction = .{
+        .outer_top_left             = "◢",
+        .outer_top_right            = "◣",
+        .outer_bottom_left          = "◥",
+        .outer_bottom_right         = "◤",
+        
+        .outer_section_t_left       = "*",
+        .outer_section_t_right      = "*",
+        .outer_header_t_left        = "*",
+        .outer_header_t_right       = "*",
+        
+        .outer_column_t_up          = "*",
+        .outer_column_t_down        = "*",
+        
+        .section_column_t_down      = "*",
+        .header_column_cross        = "*",
+    },
+};
+
+/// Neon/cyberpunk theme with diamond patterns
+/// Futuristic aesthetic with multi-line borders
+pub const neon_theme = theme.BoxyTheme{
+    .vertical = .{
+        .outer                      = "◊\n◊",
+        .column                     = "│\n│",
+    },
+    .horizontal = .{
+        .outer                      = "◊◊◊",
+        .section                    = "═",
+        .header                     = "─",
+        .row                        = null,
+    },
+    .junction = .{
+        .outer_corner               = "◊",
+        
+        .outer_section_t_left       = "◊",
+        .outer_section_t_right      = "◊",
+        .outer_header_t_left        = "◊",
+        .outer_header_t_right       = "◊",
+        
+        .outer_column_t_up          = "◊",
+        .outer_column_t_down        = "◊",
+        
+        .section_column_t_down      = "◊",
+        .header_column_cross        = "◊",
+    },
+};
+
+/// Wooden crate theme with bracketed style
+/// Gives a constructed, solid appearance
+pub const wooden_theme = theme.BoxyTheme{
+    .vertical = .{
+        .outer                      = "[|]",
+        .column                     = " | ",
+    },
+    .horizontal = .{
+        .outer                      = "[=]",
+        .section                    = "[=]",
+        .header                     = "---",
+        .row                        = null,
+    },
+    .junction = .{
+        .outer_top_left             = "[╔]",
+        .outer_top_right            = "[╗]",
+        .outer_bottom_left          = "[╚]",
+        .outer_bottom_right         = "[╝]",
+        
+        .outer_section_t_left       = "[┤]",
+        .outer_section_t_right      = "[├]",
+        .outer_header_t_left        = "[┤]",
+        .outer_header_t_right       = "[├]",
+        
+        .outer_column_t_up          = "[⊥]",
+        .outer_column_t_down        = "[T]",
+        
+        .section_column_t_down      = "[T]",
+        .header_column_cross        = "-|-",
     },
 };

@@ -1,158 +1,232 @@
-/// Theme definitions for Boxy boxes
+/// Theme definitions for Boxy boxes - Systematic structure
 ///
-/// This module contains the BoxyTheme structure and related functionality for
-/// defining how boxes look. Themes control borders, corners, junctions, and
-/// dividers.
+/// This module contains the BoxyTheme structure using a systematic approach
+/// where every line type and junction is explicitly and unambiguously named.
 ///
-/// Themes support:
-/// - Simple mode (just h_border and v_border)
-/// - Detailed mode (different borders for each side)
-/// - Multi-line borders (using \n for 3D effects)
-/// - Pattern-based borders that repeat
+/// Naming convention:
+/// - Lines are categorized as vertical or horizontal
+/// - Junctions are named as {line1}_{line2}_{shape}
+///   Example: outer_section_t_left = outer vertical meets section horizontal, T points left
 
 const std = @import("std");
 
 /// Complete theme definition for a box
 pub const BoxyTheme = struct {
-    // Outer borders - simple mode (these are used if detailed borders aren't specified)
-    h_border: ?[]const u8 = null,
-    v_border: ?[]const u8 = null,
+    // All vertical lines
+    vertical: VerticalLines = .{},
     
-    // Outer borders - detailed mode (override simple mode if specified)
-    top: ?[]const u8 = null,
-    bottom: ?[]const u8 = null,
-    left: ?[]const u8 = null,
-    right: ?[]const u8 = null,
+    // All horizontal lines  
+    horizontal: HorizontalLines = .{},
     
-    // Corners - simple mode
-    corner: ?[]const u8 = null,
-    
-    // Corners - detailed mode  
-    tl: ?[]const u8 = null,  // top-left
-    tr: ?[]const u8 = null,  // top-right
-    bl: ?[]const u8 = null,  // bottom-left
-    br: ?[]const u8 = null,  // bottom-right
-    
-    // Inner borders and junctions
-    inner: InnerBorders = .{},
-    
-    // Junctions where inner borders meet outer borders
+    // All intersections/junctions
     junction: Junctions = .{},
     
-    /// Get the effective top border (falls back to h_border if not specified)
+    /// Get the effective top border
     pub fn getTop(self: BoxyTheme) []const u8 {
-        return self.top orelse self.h_border orelse "─";
+        return self.horizontal.getTop();
     }
     
-    /// Get the effective bottom border (falls back to h_border if not specified)
+    /// Get the effective bottom border
     pub fn getBottom(self: BoxyTheme) []const u8 {
-        return self.bottom orelse self.h_border orelse "─";
+        return self.horizontal.getBottom();
     }
     
-    /// Get the effective left border (falls back to v_border if not specified)
+    /// Get the effective left border
     pub fn getLeft(self: BoxyTheme) []const u8 {
-        return self.left orelse self.v_border orelse "│";
+        return self.vertical.getLeft();
     }
     
-    /// Get the effective right border (falls back to v_border if not specified)
+    /// Get the effective right border
     pub fn getRight(self: BoxyTheme) []const u8 {
-        return self.right orelse self.v_border orelse "│";
+        return self.vertical.getRight();
     }
     
     /// Get the effective top-left corner
     pub fn getTopLeft(self: BoxyTheme) []const u8 {
-        return self.tl orelse self.corner orelse "┌";
+        return self.junction.outer_top_left orelse 
+               self.junction.outer_corner orelse "┌";
     }
     
     /// Get the effective top-right corner
     pub fn getTopRight(self: BoxyTheme) []const u8 {
-        return self.tr orelse self.corner orelse "┐";
+        return self.junction.outer_top_right orelse 
+               self.junction.outer_corner orelse "┐";
     }
     
     /// Get the effective bottom-left corner
     pub fn getBottomLeft(self: BoxyTheme) []const u8 {
-        return self.bl orelse self.corner orelse "└";
+        return self.junction.outer_bottom_left orelse 
+               self.junction.outer_corner orelse "└";
     }
     
     /// Get the effective bottom-right corner
     pub fn getBottomRight(self: BoxyTheme) []const u8 {
-        return self.br orelse self.corner orelse "┘";
+        return self.junction.outer_bottom_right orelse 
+               self.junction.outer_corner orelse "┘";
     }
     
     /// Check if this theme uses multi-line borders
     pub fn isMultiLine(self: BoxyTheme) bool {
         // Check if any border contains newlines
-        if (self.left) |border| {
-            if (std.mem.indexOf(u8, border, "\n") != null) return true;
-        }
-        if (self.right) |border| {
-            if (std.mem.indexOf(u8, border, "\n") != null) return true;
-        }
-        // Top and bottom multi-line borders would be unusual but check anyway
-        if (self.top) |border| {
-            if (std.mem.indexOf(u8, border, "\n") != null) return true;
-        }
-        if (self.bottom) |border| {
-            if (std.mem.indexOf(u8, border, "\n") != null) return true;
-        }
+        if (std.mem.indexOf(u8, self.vertical.outer, "\n") != null) return true;
+        if (std.mem.indexOf(u8, self.horizontal.outer, "\n") != null) return true;
         return false;
     }
+};
+
+/// All vertical line types
+pub const VerticalLines = struct {
+    outer: ?[]const u8 = null,          // Both left and right (simple mode)
+    outer_left: ?[]const u8 = null,     // Left border specifically
+    outer_right: ?[]const u8 = null,    // Right border specifically
+    column: []const u8 = "│",           // Column dividers between data
     
-    /// Calculate the border thickness (for multi-line borders)
-    pub fn getBorderThickness(self: BoxyTheme) struct { top: usize, bottom: usize, left: usize, right: usize } {
-        _ = self;
-        // Implementation placeholder - count newlines
-        return .{ .top = 1, .bottom = 1, .left = 1, .right = 1 };
+    /// Get effective left border
+    pub fn getLeft(self: VerticalLines) []const u8 {
+        return self.outer_left orelse self.outer orelse "│";
+    }
+    
+    /// Get effective right border
+    pub fn getRight(self: VerticalLines) []const u8 {
+        return self.outer_right orelse self.outer orelse "│";
     }
 };
 
-/// Inner borders for separating content within the box
-pub const InnerBorders = struct {
-    h: []const u8 = "─",           // Horizontal separator between rows
-    v: []const u8 = "│",           // Vertical separator between columns
-    section: []const u8 = "═",     // Heavy separator (e.g., after title)
-    cross: []const u8 = "┼",       // Where h and v meet
+/// All horizontal line types  
+pub const HorizontalLines = struct {
+    outer: ?[]const u8 = null,          // Both top and bottom (simple mode)
+    outer_top: ?[]const u8 = null,      // Top border specifically
+    outer_bottom: ?[]const u8 = null,   // Bottom border specifically
+    section: ?[]const u8 = null,        // After title (defaults to outer if null)
+    header: ?[]const u8 = null,         // Between headers and data (defaults to section if null)
+    row: ?[]const u8 = null,            // Between data rows (null = no row dividers)
     
-    // T-junctions for inner borders
-    t_down: []const u8 = "┬",      // ┬ shape (inner horizontal meets top border)
-    t_up: []const u8 = "┴",        // ┴ shape (inner horizontal meets bottom border)
-    t_right: []const u8 = "├",     // ├ shape (inner vertical meets left border)
-    t_left: []const u8 = "┤",      // ┤ shape (inner vertical meets right border)
+    /// Get effective top border
+    pub fn getTop(self: HorizontalLines) []const u8 {
+        return self.outer_top orelse self.outer orelse "─";
+    }
     
-    // Optional row dividers (between data rows)
-    row_divider: ?[]const u8 = null,      // Line between data rows (null = no dividers)
-    row_cross: ?[]const u8 = null,        // Junction where row divider meets column separator
-    row_left: ?[]const u8 = null,         // Junction where row divider meets left border
-    row_right: ?[]const u8 = null,        // Junction where row divider meets right border
+    /// Get effective bottom border
+    pub fn getBottom(self: HorizontalLines) []const u8 {
+        return self.outer_bottom orelse self.outer orelse "─";
+    }
+    
+    /// Get effective section divider (with fallback)
+    pub fn getSection(self: HorizontalLines) []const u8 {
+        return self.section orelse self.outer orelse "─";
+    }
+    
+    /// Get effective header divider (with fallback chain)
+    pub fn getHeader(self: HorizontalLines) []const u8 {
+        return self.header orelse self.section orelse self.outer orelse "─";
+    }
 };
 
-/// Junction points where inner borders meet outer borders
+/// All junction types (where lines meet)
 pub const Junctions = struct {
-    top: []const u8 = "┬",         // Inner vertical meets top border
-    bottom: []const u8 = "┴",      // Inner vertical meets bottom border
-    left: []const u8 = "├",        // Inner horizontal meets left border
-    right: []const u8 = "┤",       // Inner horizontal meets right border
+    // Outer × Outer = Corners
+    outer_corner: ?[]const u8 = null,              // All four corners (simple mode)
+    outer_top_left: ?[]const u8 = null,            // ┌ ╔ ╭ o
+    outer_top_right: ?[]const u8 = null,           // ┐ ╗ ╮ o
+    outer_bottom_left: ?[]const u8 = null,         // └ ╚ ╰ o
+    outer_bottom_right: ?[]const u8 = null,        // ┘ ╝ ╯ o
+    
+    // Outer vertical × Inner horizontal = T-junctions at left/right borders
+    outer_section_t_left: ?[]const u8 = null,      // Right border meets section line
+    outer_section_t_right: ?[]const u8 = null,     // Left border meets section line
+    outer_header_t_left: ?[]const u8 = null,       // Right border meets header line
+    outer_header_t_right: ?[]const u8 = null,      // Left border meets header line
+    outer_row_t_left: ?[]const u8 = null,          // Right border meets row divider
+    outer_row_t_right: ?[]const u8 = null,         // Left border meets row divider
+    
+    // Outer horizontal × Inner vertical = T-junctions at top/bottom borders
+    outer_column_t_up: ?[]const u8 = null,         // Bottom border meets column
+    outer_column_t_down: ?[]const u8 = null,       // Top border meets column
+    
+    // Inner × Inner = Crosses and T-junctions inside the box
+    section_column_t_down: ?[]const u8 = null,     // Column starts at section line
+    section_column_cross: ?[]const u8 = null,      // Column crosses section (if it continues)
+    header_column_t_down: ?[]const u8 = null,      // Column starts at header line
+    header_column_cross: ?[]const u8 = null,       // Column crosses header line
+    row_column_cross: ?[]const u8 = null,          // Column crosses row divider
+    
+    // Smart defaults for T-junctions at borders
+    pub fn getOuterSectionTLeft(self: Junctions) []const u8 {
+        return self.outer_section_t_left orelse "┤";
+    }
+    
+    pub fn getOuterSectionTRight(self: Junctions) []const u8 {
+        return self.outer_section_t_right orelse "├";
+    }
+    
+    pub fn getOuterHeaderTLeft(self: Junctions) []const u8 {
+        return self.outer_header_t_left orelse 
+               self.outer_section_t_left orelse "┤";
+    }
+    
+    pub fn getOuterHeaderTRight(self: Junctions) []const u8 {
+        return self.outer_header_t_right orelse 
+               self.outer_section_t_right orelse "├";
+    }
+    
+    pub fn getOuterRowTLeft(self: Junctions) []const u8 {
+        return self.outer_row_t_left orelse 
+               self.outer_header_t_left orelse 
+               self.outer_section_t_left orelse "┤";
+    }
+    
+    pub fn getOuterRowTRight(self: Junctions) []const u8 {
+        return self.outer_row_t_right orelse 
+               self.outer_header_t_right orelse 
+               self.outer_section_t_right orelse "├";
+    }
+    
+    pub fn getOuterColumnTUp(self: Junctions) []const u8 {
+        return self.outer_column_t_up orelse "┴";
+    }
+    
+    pub fn getOuterColumnTDown(self: Junctions) []const u8 {
+        return self.outer_column_t_down orelse "┬";
+    }
+    
+    pub fn getSectionColumnTDown(self: Junctions) []const u8 {
+        return self.section_column_t_down orelse 
+               self.outer_column_t_down orelse "┬";
+    }
+    
+    pub fn getHeaderColumnCross(self: Junctions) []const u8 {
+        return self.header_column_cross orelse "┼";
+    }
+    
+    pub fn getRowColumnCross(self: Junctions) []const u8 {
+        return self.row_column_cross orelse 
+               self.header_column_cross orelse "┼";
+    }
 };
 
-/// Creates a simple theme with just horizontal and vertical borders
-pub fn simple(h: []const u8, v: []const u8) BoxyTheme {
+/// Helper functions for theme creation
+
+/// Creates a simple theme with minimal configuration
+pub fn simple(h: []const u8, v: []const u8, corner: []const u8) BoxyTheme {
     return .{
-        .h_border = h,
-        .v_border = v,
+        .vertical = .{ .outer = v, .column = v },
+        .horizontal = .{ .outer = h },
+        .junction = .{ .outer_corner = corner },
     };
 }
 
-/// Creates a 3D theme with different borders on each side
-pub fn dimensional(top: []const u8, bottom: []const u8, left: []const u8, right: []const u8) BoxyTheme {
+/// Creates a theme with different outer borders
+pub fn bordered(top: []const u8, bottom: []const u8, left: []const u8, right: []const u8) BoxyTheme {
     return .{
-        .top = top,
-        .bottom = bottom,
-        .left = left,
-        .right = right,
+        .vertical = .{ 
+            .outer_left = left,
+            .outer_right = right,
+            .column = "│",
+        },
+        .horizontal = .{ 
+            .outer_top = top,
+            .outer_bottom = bottom,
+        },
+        .junction = .{},
     };
-}
-
-/// Creates a theme from a custom border configuration
-pub fn custom(config: BoxyTheme) BoxyTheme {
-    return config;
 }
