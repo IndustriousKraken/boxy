@@ -221,10 +221,10 @@ pub const ascii_theme = theme.BoxyTheme{
     .junction = .{
         .outer_corner               = "++",
         
-        .outer_section_t_left       = "||",
-        .outer_section_t_right      = "||",
-        .outer_header_t_left        = "+",
-        .outer_header_t_right       = "+",
+        .outer_section_t_left       = "++",
+        .outer_section_t_right      = "++",
+        .outer_header_t_left        = "++",
+        .outer_header_t_right       = "++",
         
         .outer_column_t_up          = "+",
         .outer_column_t_down        = "+",
@@ -349,15 +349,15 @@ pub const tribal_theme = theme.BoxyTheme{
     .junction = .{
         .outer_corner               = "oo",
         
-        .outer_section_t_left       = "oo",
-        .outer_section_t_right      = "oo",
-        .outer_header_t_left        = "…",
-        .outer_header_t_right       = "…",
+        .outer_section_t_left       = "✴✴",
+        .outer_section_t_right      = "✴✴",
+        .outer_header_t_left        = "::",
+        .outer_header_t_right       = "::",
         
         .outer_column_t_up          = "✴✴",
         .outer_column_t_down        = "✴✴",
         
-        .section_column_t_down      = "……",
+        .section_column_t_down      = "✴✴",
         .header_column_cross        = "……",
     },
 };

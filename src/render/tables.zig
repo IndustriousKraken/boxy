@@ -25,11 +25,7 @@ pub const TableRenderOptions = struct {
 /// Get the display width of a theme's column separator (first line only)
 pub fn getSeparatorWidth(box_theme: theme.BoxyTheme) usize {
     const separator = box_theme.vertical.column;
-    const separator_first_line = if (std.mem.indexOfScalar(u8, separator, '\n')) |idx|
-        separator[0..idx]
-    else
-        separator;
-    return utils.displayWidth(separator_first_line);
+    return utils.displayWidth(utils.firstLine(separator));
 }
 
 /// Render a complete table row with column separators
@@ -44,27 +40,6 @@ pub fn renderTableRow(writer: anytype, ctx: RenderContext, options: TableRenderO
     const left_border = ctx.theme.getLeft();
     const right_border = ctx.theme.getRight();
     const separator = ctx.theme.vertical.column;
-    
-    // Get first lines for multi-line borders
-    const left_first_line = if (std.mem.indexOfScalar(u8, left_border, '\n')) |idx|
-        left_border[0..idx]
-    else
-        left_border;
-    
-    const right_first_line = if (std.mem.indexOfScalar(u8, right_border, '\n')) |idx|
-        right_border[0..idx]
-    else
-        right_border;
-    
-    const separator_first_line = if (std.mem.indexOfScalar(u8, separator, '\n')) |idx|
-        separator[0..idx]
-    else
-        separator;
-    
-    // Calculate display widths
-    _ = utils.displayWidth(left_first_line);
-    _ = utils.displayWidth(right_first_line);
-    _ = utils.displayWidth(separator_first_line);
     
     // Determine how many lines we need to render (for multi-line borders)
     var max_lines: usize = 1;
@@ -106,25 +81,8 @@ pub fn renderTableRow(writer: anytype, ctx: RenderContext, options: TableRenderO
             
             if (line_idx == 0) {
                 // First line: render actual content with padding
-                const effective_width = if (col_width >= cell_padding * 2)
-                    col_width - (cell_padding * 2)
-                else
-                    0;
-                
-                // Add left padding
-                for (0..cell_padding) |_| {
-                    if (col_width > 0) try writer.writeByte(' ');
-                }
-                
-                // Render cell content
-                if (effective_width > 0) {
-                    try content.renderCell(writer, cells[col_idx], effective_width, alignment);
-                }
-                
-                // Add right padding
-                for (0..cell_padding) |_| {
-                    if (col_width > cell_padding) try writer.writeByte(' ');
-                }
+                // Column width already includes padding space
+                try content.renderCellWithPadding(writer, cells[col_idx], col_width, cell_padding, alignment);
             } else {
                 // Subsequent lines: just spaces
                 for (0..col_width) |_| {

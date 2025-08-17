@@ -55,6 +55,7 @@ pub fn build(b: *std.Build) void {
         .{ .name = "height_test", .desc = "Height constraint test" },
         .{ .name = "test_junctions", .desc = "Test junction characters" },
         .{ .name = "test_junctions_no_title", .desc = "Test junctions without title" },
+        .{ .name = "custom_themes", .desc = "Custom theme creation examples" },
     };
 
     // Build each example

@@ -85,6 +85,10 @@ pub fn displayWidth(text: []const u8) usize {
                 if (text[i + 1] == 0xB8 and (text[i + 2] == 0x8E or text[i + 2] == 0x8F)) {
                     // U+FE0E (text) and U+FE0F (emoji) variation selectors
                     width += 0;  // Zero-width modifiers
+                } else if (text[i + 1] == 0xBC or text[i + 1] == 0xBD or text[i + 1] == 0xBE or text[i + 1] == 0xBF) {
+                    // EF BC-BF range (U+FF00-U+FFEF) - Fullwidth forms
+                    // These include fullwidth ASCII and symbols that display as 2 columns
+                    width += 2;  // Fullwidth characters
                 } else {
                     width += 1;  // Other EF sequences
                 }
@@ -179,6 +183,14 @@ pub fn truncateUtf8(text: []const u8, max_chars: usize, indicator: []const u8) [
 /// Split text into lines
 pub fn splitLines(text: []const u8) std.mem.TokenIterator(u8, .scalar) {
     return std.mem.tokenizeScalar(u8, text, '\n');
+}
+
+/// Get the first line of a potentially multi-line string
+pub fn firstLine(text: []const u8) []const u8 {
+    if (std.mem.indexOfScalar(u8, text, '\n')) |idx| {
+        return text[0..idx];
+    }
+    return text;
 }
 
 /// Join lines with newline separator

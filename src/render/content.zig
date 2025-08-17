@@ -109,7 +109,31 @@ pub fn renderContentRow(writer: anytype, box_theme: theme.BoxyTheme, total_width
     }
 }
 
-/// Render a single cell with proper alignment and padding
+/// Render a single cell with column padding
+pub fn renderCellWithPadding(writer: anytype, text: []const u8, total_width: usize, cell_padding: usize, alignment: layout.Alignment) !void {
+    // Write left padding
+    for (0..cell_padding) |_| {
+        try writer.writeByte(' ');
+    }
+    
+    // Calculate content width
+    const content_width = if (total_width > cell_padding * 2)
+        total_width - (cell_padding * 2)
+    else
+        0;
+    
+    // Render the actual content
+    if (content_width > 0) {
+        try renderCell(writer, text, content_width, alignment);
+    }
+    
+    // Write right padding
+    for (0..cell_padding) |_| {
+        try writer.writeByte(' ');
+    }
+}
+
+/// Render a single cell with proper alignment (no padding)
 pub fn renderCell(writer: anytype, text: []const u8, width: usize, alignment: layout.Alignment) !void {
     const text_display_width = utils.displayWidth(text);
     
