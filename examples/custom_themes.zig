@@ -11,37 +11,38 @@ const BoxyTheme = boxy.BoxyTheme;
 /// Uses pipe characters and dots for a tech/hacker aesthetic
 const matrix_theme = BoxyTheme{
     .vertical = .{
-        .outer                      = "║",
-        .column                     = "┊",
+        .outer                      = "¹₀\n⁰₁", 
+        .column                     = "┊\n┊",
     },
     .horizontal = .{
-        .outer                      = "═",
-        .section                    = "┅",  // Dotted line for sections
-        .header                     = "┅",
+        .outer_top                  = "¹⁰¹",
+        .outer_bottom               = "₁₀₁",
+        .section                    = "…",
+        .header                     = "…",
         .row                        = null,
     },
     .junction = .{
         // Corners with special characters
-        .outer_top_left             = "◤",
-        .outer_top_right            = "◥",
-        .outer_bottom_left          = "◣",
-        .outer_bottom_right         = "◢",
+        .outer_top_left             = "ͺᶝ",
+        .outer_top_right            = "¹ⱼ",
+        .outer_bottom_left          = "ᶩ₀",
+        .outer_bottom_right         = "₀ᶡ",
         
         // Section junctions
-        .outer_section_t_left       = "╡",
-        .outer_section_t_right      = "╞",
+        .outer_section_t_left       = "¹₀",
+        .outer_section_t_right      = "¹₁",
         
         // Header junctions  
-        .outer_header_t_left        = "┤",
-        .outer_header_t_right       = "├",
+        .outer_header_t_left        = "ᶷ₀",
+        .outer_header_t_right       = "ᶛ₀",
         
         // Column junctions
-        .outer_column_t_up          = "╨",
+        .outer_column_t_up          = "₀",
         .outer_column_t_down        = "╥",
         
         // Inner junctions
-        .section_column_t_down      = "┬",
-        .header_column_cross        = "┼",
+        .section_column_t_down      = "…",
+        .header_column_cross        = "…",
     },
 };
 
@@ -119,29 +120,29 @@ const fullwidth_theme = BoxyTheme{
 const shadow_3d_theme = BoxyTheme{
     .vertical = .{
         .outer_left                 = "█",      // Solid left
-        .outer_right                = "▐░",     // Right with shadow
+        .outer_right                = "█░",     // Right with shadow
         .column                     = "│",
     },
     .horizontal = .{
-        .outer_top                  = "▀",      // Top edge
-        .outer_bottom                = "▄░",    // Bottom with shadow
-        .section                    = "═",
-        .header                     = "─",
+        .outer_top                  = "▀\nkjsdhf",   
+        .outer_bottom               = "▄\nhjkhkjh░",    
+        .section                    = "═\ns;ldfks;l",
+        .header                     = "─\ndklsfjsdj",
         .row                        = null,
     },
     .junction = .{
-        .outer_top_left             = "▛",
-        .outer_top_right            = "▜░",     // Shadow on right
-        .outer_bottom_left          = "▙",  
-        .outer_bottom_right         = "▟░░",    // Double shadow corner
+        .outer_top_left             = "█",
+        .outer_top_right            = "█░",     // Shadow on right
+        .outer_bottom_left          = "█",  
+        .outer_bottom_right         = "█░",    
         
-        .outer_section_t_left       = "▐░",
+        .outer_section_t_left       = "█░",
         .outer_section_t_right      = "█",
-        .outer_header_t_left        = "┤░",
-        .outer_header_t_right       = "├",
+        .outer_header_t_left        = "█░",
+        .outer_header_t_right       = "█",
         
-        .outer_column_t_up          = "▄┴░",
-        .outer_column_t_down        = "▀┬",
+        .outer_column_t_up          = "▄",
+        .outer_column_t_down        = "▀",
         
         .section_column_t_down      = "┬",
         .header_column_cross        = "┼",
