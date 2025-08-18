@@ -36,27 +36,17 @@ pub fn build(b: *std.Build) void {
     // Define all examples
     const example_files = [_]struct { name: []const u8, desc: []const u8 }{
         .{ .name = "minimal", .desc = "Minimal box example" },
-        .{ .name = "game", .desc = "Game inventory example" },
         .{ .name = "table", .desc = "Table with headers" },
-        .{ .name = "schedule", .desc = "Schedule with spreadsheet mode" },
         .{ .name = "grades", .desc = "Gradebook with spreadsheet mode" },
         .{ .name = "grid", .desc = "Grid theme with row dividers" },
         .{ .name = "headless", .desc = "Table without headers" },
         .{ .name = "invoice", .desc = "Invoice with mixed content" },
-        .{ .name = "multiline", .desc = "Multi-line borders example" },
-        .{ .name = "canvas_demo", .desc = "Canvas mode for dynamic content" },
-        .{ .name = "canvas_animation", .desc = "Canvas animation demo" },
         .{ .name = "canvas_bounce", .desc = "Animated bouncing ball demo" },
-        .{ .name = "cjk_test", .desc = "CJK and emoji character width test" },
         .{ .name = "row_orientation", .desc = "Row orientation examples" },
-        .{ .name = "orientation_comparison", .desc = "Compare orientation vs spreadsheet mode" },
         .{ .name = "size_constraints", .desc = "Width constraints examples" },
         .{ .name = "extra_space_strategy", .desc = "Extra space distribution strategies" },
-        .{ .name = "height_test", .desc = "Height constraint test" },
-        .{ .name = "test_junctions", .desc = "Test junction characters" },
-        .{ .name = "test_junctions_no_title", .desc = "Test junctions without title" },
         .{ .name = "custom_themes", .desc = "Custom theme creation examples" },
-        .{ .name = "western_shop", .desc = "Animated western shop interface demo" },
+        .{ .name = "western_shop", .desc = "Animated western shop interface using layout manager" },
     };
 
     // Build each example

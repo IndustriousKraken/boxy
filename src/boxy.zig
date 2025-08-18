@@ -20,6 +20,7 @@ const theme_mod = @import("theme.zig");
 const box_mod = @import("box.zig");
 const canvas_mod = @import("canvas.zig");
 const layout_mod = @import("layout.zig");
+const layout_manager_mod = @import("layout_manager.zig");
 const render_mod = @import("render.zig");
 const presets_mod = @import("presets.zig");
 const config_mod = @import("config.zig");
@@ -37,6 +38,8 @@ pub const SizePreset = builder_mod.SizePreset;
 pub const BoxyBuilder = builder_mod.BoxyBuilder;
 pub const BoxyFactory = factory_mod.BoxyFactory;
 pub const BoxyConfig = config_mod.BoxyConfig;
+pub const LayoutManager = layout_manager_mod.LayoutManager;
+pub const BoxBounds = layout_manager_mod.BoxBounds;
 
 /// Creates a new Boxy builder for constructing boxes with a fluent interface
 /// 
@@ -56,4 +59,19 @@ pub fn new(allocator: std.mem.Allocator) BoxyBuilder {
 /// ```
 pub fn factory(allocator: std.mem.Allocator, factory_config: BoxyConfig) BoxyFactory {
     return BoxyFactory.init(allocator, factory_config);
+}
+
+/// Creates a layout manager for positioning multiple boxes
+///
+/// Use this to create complex layouts with multiple boxes side-by-side
+/// Example:
+/// ```zig
+/// var layout = try boxy.layout(allocator, 80, 25);
+/// defer layout.deinit();
+/// layout.place(box1, 0, 0);
+/// layout.place(box2, 0, 40);
+/// const output = try layout.render();
+/// ```
+pub fn layout(allocator: std.mem.Allocator, width: usize, height: usize) !LayoutManager {
+    return LayoutManager.init(allocator, width, height);
 }
