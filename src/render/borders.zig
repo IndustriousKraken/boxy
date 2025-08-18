@@ -15,47 +15,60 @@ pub fn renderTopBorder(writer: anytype, box_theme: theme.BoxyTheme, width: usize
     const h_line = box_theme.getTop();
     const junction = box_theme.junction.getOuterColumnTDown();
 
-    // Get first line of each border component for multi-line border support
-    const tl_first_line = if (std.mem.indexOfScalar(u8, tl_corner, '\n')) |idx|
-        tl_corner[0..idx]
-    else
-        tl_corner;
+    // Split each component into lines
+    var tl_lines = std.mem.splitScalar(u8, tl_corner, '\n');
+    var tr_lines = std.mem.splitScalar(u8, tr_corner, '\n');
+    var h_lines = std.mem.splitScalar(u8, h_line, '\n');
+    var junction_lines = std.mem.splitScalar(u8, junction, '\n');
     
-    const tr_first_line = if (std.mem.indexOfScalar(u8, tr_corner, '\n')) |idx|
-        tr_corner[0..idx]
-    else
-        tr_corner;
+    // Count maximum lines
+    var max_lines: usize = 0;
+    var temp_tl = std.mem.splitScalar(u8, tl_corner, '\n');
+    var temp_tr = std.mem.splitScalar(u8, tr_corner, '\n');
+    var temp_h = std.mem.splitScalar(u8, h_line, '\n');
+    var temp_j = std.mem.splitScalar(u8, junction, '\n');
     
-    const h_first_line = if (std.mem.indexOfScalar(u8, h_line, '\n')) |idx|
-        h_line[0..idx]
-    else
-        h_line;
+    while (temp_tl.next()) |_| : (max_lines = @max(max_lines, 1)) {}
+    var line_count: usize = 0;
+    while (temp_tr.next()) |_| : (line_count += 1) {}
+    max_lines = @max(max_lines, line_count);
+    line_count = 0;
+    while (temp_h.next()) |_| : (line_count += 1) {}
+    max_lines = @max(max_lines, line_count);
+    line_count = 0;
+    while (temp_j.next()) |_| : (line_count += 1) {}
+    max_lines = @max(max_lines, line_count);
     
-    const junction_first_line = if (std.mem.indexOfScalar(u8, junction, '\n')) |idx|
-        junction[0..idx]
-    else
-        junction;
-
-    // Calculate widths for proper spacing
-    const tl_width = utils.displayWidth(tl_first_line);
-    const tr_width = utils.displayWidth(tr_first_line);
-    const content_width = width - tl_width - tr_width;
+    if (max_lines == 0) max_lines = 1;
     
-    // Write left corner
-    try writer.writeAll(tl_first_line);
-    
-    // Fill the horizontal space
-    if (column_widths) |col_widths| {
-        // Render with column junctions
-        try renderHorizontalWithJunctions(writer, h_first_line, junction_first_line, content_width, col_widths);
-    } else {
-        // Simple horizontal fill
-        try renderPattern(writer, h_first_line, content_width);
+    // Render each line
+    for (0..max_lines) |_| {
+        const tl_line = tl_lines.next() orelse "";
+        const tr_line = tr_lines.next() orelse "";
+        const h_pattern = h_lines.next() orelse "";
+        const junction_pattern = junction_lines.next() orelse "";
+        
+        // Calculate widths for this line
+        const tl_width = utils.displayWidth(tl_line);
+        const tr_width = utils.displayWidth(tr_line);
+        const content_width = width - tl_width - tr_width;
+        
+        // Write left corner
+        try writer.writeAll(tl_line);
+        
+        // Fill the horizontal space
+        if (column_widths) |col_widths| {
+            // Render with column junctions
+            try renderHorizontalWithJunctions(writer, h_pattern, junction_pattern, content_width, col_widths);
+        } else {
+            // Simple horizontal fill
+            try renderPattern(writer, h_pattern, content_width);
+        }
+        
+        // Write right corner
+        try writer.writeAll(tr_line);
+        try writer.writeByte('\n');
     }
-    
-    // Write right corner
-    try writer.writeAll(tr_first_line);
-    try writer.writeByte('\n');
 }
 
 /// Render the bottom border of a box (supports multi-line borders and column junctions)
@@ -65,45 +78,58 @@ pub fn renderBottomBorder(writer: anytype, box_theme: theme.BoxyTheme, width: us
     const h_line = box_theme.getBottom();
     const junction = box_theme.junction.getOuterColumnTUp();
 
-    // Get first line of each border component
-    const bl_first_line = if (std.mem.indexOfScalar(u8, bl_corner, '\n')) |idx|
-        bl_corner[0..idx]
-    else
-        bl_corner;
+    // Split each component into lines
+    var bl_lines = std.mem.splitScalar(u8, bl_corner, '\n');
+    var br_lines = std.mem.splitScalar(u8, br_corner, '\n');
+    var h_lines = std.mem.splitScalar(u8, h_line, '\n');
+    var junction_lines = std.mem.splitScalar(u8, junction, '\n');
     
-    const br_first_line = if (std.mem.indexOfScalar(u8, br_corner, '\n')) |idx|
-        br_corner[0..idx]
-    else
-        br_corner;
+    // Count maximum lines
+    var max_lines: usize = 0;
+    var temp_bl = std.mem.splitScalar(u8, bl_corner, '\n');
+    var temp_br = std.mem.splitScalar(u8, br_corner, '\n');
+    var temp_h = std.mem.splitScalar(u8, h_line, '\n');
+    var temp_j = std.mem.splitScalar(u8, junction, '\n');
     
-    const h_first_line = if (std.mem.indexOfScalar(u8, h_line, '\n')) |idx|
-        h_line[0..idx]
-    else
-        h_line;
+    while (temp_bl.next()) |_| : (max_lines = @max(max_lines, 1)) {}
+    var line_count: usize = 0;
+    while (temp_br.next()) |_| : (line_count += 1) {}
+    max_lines = @max(max_lines, line_count);
+    line_count = 0;
+    while (temp_h.next()) |_| : (line_count += 1) {}
+    max_lines = @max(max_lines, line_count);
+    line_count = 0;
+    while (temp_j.next()) |_| : (line_count += 1) {}
+    max_lines = @max(max_lines, line_count);
     
-    const junction_first_line = if (std.mem.indexOfScalar(u8, junction, '\n')) |idx|
-        junction[0..idx]
-    else
-        junction;
-
-    // Calculate widths
-    const bl_width = utils.displayWidth(bl_first_line);
-    const br_width = utils.displayWidth(br_first_line);
-    const content_width = width - bl_width - br_width;
+    if (max_lines == 0) max_lines = 1;
     
-    // Write left corner
-    try writer.writeAll(bl_first_line);
-    
-    // Fill the horizontal space
-    if (column_widths) |col_widths| {
-        try renderHorizontalWithJunctions(writer, h_first_line, junction_first_line, content_width, col_widths);
-    } else {
-        try renderPattern(writer, h_first_line, content_width);
+    // Render each line
+    for (0..max_lines) |_| {
+        const bl_line = bl_lines.next() orelse "";
+        const br_line = br_lines.next() orelse "";
+        const h_pattern = h_lines.next() orelse "";
+        const junction_pattern = junction_lines.next() orelse "";
+        
+        // Calculate widths for this line
+        const bl_width = utils.displayWidth(bl_line);
+        const br_width = utils.displayWidth(br_line);
+        const content_width = width - bl_width - br_width;
+        
+        // Write left corner
+        try writer.writeAll(bl_line);
+        
+        // Fill the horizontal space
+        if (column_widths) |col_widths| {
+            try renderHorizontalWithJunctions(writer, h_pattern, junction_pattern, content_width, col_widths);
+        } else {
+            try renderPattern(writer, h_pattern, content_width);
+        }
+        
+        // Write right corner
+        try writer.writeAll(br_line);
+        try writer.writeByte('\n');
     }
-    
-    // Write right corner
-    try writer.writeAll(br_first_line);
-    try writer.writeByte('\n');
 }
 
 /// Render a section divider (between different sections)
@@ -113,45 +139,58 @@ pub fn renderSectionDivider(writer: anytype, box_theme: theme.BoxyTheme, width: 
     const h_line = box_theme.horizontal.getSection();
     const cross_junction = box_theme.junction.section_column_cross orelse box_theme.junction.getSectionColumnTDown();
 
-    // Get first lines for multi-line support
-    const left_first = if (std.mem.indexOfScalar(u8, left_junction, '\n')) |idx|
-        left_junction[0..idx]
-    else
-        left_junction;
+    // Split each component into lines
+    var left_lines = std.mem.splitScalar(u8, left_junction, '\n');
+    var right_lines = std.mem.splitScalar(u8, right_junction, '\n');
+    var h_lines = std.mem.splitScalar(u8, h_line, '\n');
+    var cross_lines = std.mem.splitScalar(u8, cross_junction, '\n');
     
-    const right_first = if (std.mem.indexOfScalar(u8, right_junction, '\n')) |idx|
-        right_junction[0..idx]
-    else
-        right_junction;
+    // Count maximum lines
+    var max_lines: usize = 0;
+    var temp_left = std.mem.splitScalar(u8, left_junction, '\n');
+    var temp_right = std.mem.splitScalar(u8, right_junction, '\n');
+    var temp_h = std.mem.splitScalar(u8, h_line, '\n');
+    var temp_cross = std.mem.splitScalar(u8, cross_junction, '\n');
     
-    const h_first_line = if (std.mem.indexOfScalar(u8, h_line, '\n')) |idx|
-        h_line[0..idx]
-    else
-        h_line;
+    while (temp_left.next()) |_| : (max_lines = @max(max_lines, 1)) {}
+    var line_count: usize = 0;
+    while (temp_right.next()) |_| : (line_count += 1) {}
+    max_lines = @max(max_lines, line_count);
+    line_count = 0;
+    while (temp_h.next()) |_| : (line_count += 1) {}
+    max_lines = @max(max_lines, line_count);
+    line_count = 0;
+    while (temp_cross.next()) |_| : (line_count += 1) {}
+    max_lines = @max(max_lines, line_count);
     
-    const cross_first_line = if (std.mem.indexOfScalar(u8, cross_junction, '\n')) |idx|
-        cross_junction[0..idx]
-    else
-        cross_junction;
-
-    // Calculate content width
-    const left_width = utils.displayWidth(left_first);
-    const right_width = utils.displayWidth(right_first);
-    const content_width = width - left_width - right_width;
+    if (max_lines == 0) max_lines = 1;
     
-    // Write left junction
-    try writer.writeAll(left_first);
-    
-    // Fill the horizontal space
-    if (column_widths) |col_widths| {
-        try renderHorizontalWithJunctions(writer, h_first_line, cross_first_line, content_width, col_widths);
-    } else {
-        try renderPattern(writer, h_first_line, content_width);
+    // Render each line
+    for (0..max_lines) |_| {
+        const left_line = left_lines.next() orelse "";
+        const right_line = right_lines.next() orelse "";
+        const h_pattern = h_lines.next() orelse "";
+        const cross_pattern = cross_lines.next() orelse "";
+        
+        // Calculate widths for this line
+        const left_width = utils.displayWidth(left_line);
+        const right_width = utils.displayWidth(right_line);
+        const content_width = width - left_width - right_width;
+        
+        // Write left junction
+        try writer.writeAll(left_line);
+        
+        // Fill the horizontal space
+        if (column_widths) |col_widths| {
+            try renderHorizontalWithJunctions(writer, h_pattern, cross_pattern, content_width, col_widths);
+        } else {
+            try renderPattern(writer, h_pattern, content_width);
+        }
+        
+        // Write right junction
+        try writer.writeAll(right_line);
+        try writer.writeByte('\n');
     }
-    
-    // Write right junction
-    try writer.writeAll(right_first);
-    try writer.writeByte('\n');
 }
 
 /// Render a header divider (between headers and data)
@@ -161,41 +200,54 @@ pub fn renderHeaderDivider(writer: anytype, box_theme: theme.BoxyTheme, width: u
     const h_line = box_theme.horizontal.getHeader();
     const cross_junction = box_theme.junction.getHeaderColumnCross();
 
-    // Get first lines
-    const left_first = if (std.mem.indexOfScalar(u8, left_junction, '\n')) |idx|
-        left_junction[0..idx]
-    else
-        left_junction;
+    // Split each component into lines
+    var left_lines = std.mem.splitScalar(u8, left_junction, '\n');
+    var right_lines = std.mem.splitScalar(u8, right_junction, '\n');
+    var h_lines = std.mem.splitScalar(u8, h_line, '\n');
+    var cross_lines = std.mem.splitScalar(u8, cross_junction, '\n');
     
-    const right_first = if (std.mem.indexOfScalar(u8, right_junction, '\n')) |idx|
-        right_junction[0..idx]
-    else
-        right_junction;
+    // Count maximum lines
+    var max_lines: usize = 0;
+    var temp_left = std.mem.splitScalar(u8, left_junction, '\n');
+    var temp_right = std.mem.splitScalar(u8, right_junction, '\n');
+    var temp_h = std.mem.splitScalar(u8, h_line, '\n');
+    var temp_cross = std.mem.splitScalar(u8, cross_junction, '\n');
     
-    const h_first_line = if (std.mem.indexOfScalar(u8, h_line, '\n')) |idx|
-        h_line[0..idx]
-    else
-        h_line;
+    while (temp_left.next()) |_| : (max_lines = @max(max_lines, 1)) {}
+    var line_count: usize = 0;
+    while (temp_right.next()) |_| : (line_count += 1) {}
+    max_lines = @max(max_lines, line_count);
+    line_count = 0;
+    while (temp_h.next()) |_| : (line_count += 1) {}
+    max_lines = @max(max_lines, line_count);
+    line_count = 0;
+    while (temp_cross.next()) |_| : (line_count += 1) {}
+    max_lines = @max(max_lines, line_count);
     
-    const cross_first_line = if (std.mem.indexOfScalar(u8, cross_junction, '\n')) |idx|
-        cross_junction[0..idx]
-    else
-        cross_junction;
-
-    // Calculate content width
-    const left_width = utils.displayWidth(left_first);
-    const right_width = utils.displayWidth(right_first);
-    const content_width = width - left_width - right_width;
+    if (max_lines == 0) max_lines = 1;
     
-    // Write left junction
-    try writer.writeAll(left_first);
-    
-    // Always render with junctions for header dividers
-    try renderHorizontalWithJunctions(writer, h_first_line, cross_first_line, content_width, column_widths);
-    
-    // Write right junction
-    try writer.writeAll(right_first);
-    try writer.writeByte('\n');
+    // Render each line
+    for (0..max_lines) |_| {
+        const left_line = left_lines.next() orelse "";
+        const right_line = right_lines.next() orelse "";
+        const h_pattern = h_lines.next() orelse "";
+        const cross_pattern = cross_lines.next() orelse "";
+        
+        // Calculate widths for this line
+        const left_width = utils.displayWidth(left_line);
+        const right_width = utils.displayWidth(right_line);
+        const content_width = width - left_width - right_width;
+        
+        // Write left junction
+        try writer.writeAll(left_line);
+        
+        // Always render with junctions for header dividers
+        try renderHorizontalWithJunctions(writer, h_pattern, cross_pattern, content_width, column_widths);
+        
+        // Write right junction
+        try writer.writeAll(right_line);
+        try writer.writeByte('\n');
+    }
 }
 
 /// Render a row divider (between data rows in tables)
@@ -206,41 +258,54 @@ pub fn renderRowDivider(writer: anytype, box_theme: theme.BoxyTheme, width: usiz
     const right_junction = box_theme.junction.getOuterRowTLeft();
     const cross_junction = box_theme.junction.getRowColumnCross();
 
-    // Get first lines
-    const left_first = if (std.mem.indexOfScalar(u8, left_junction, '\n')) |idx|
-        left_junction[0..idx]
-    else
-        left_junction;
+    // Split each component into lines
+    var left_lines = std.mem.splitScalar(u8, left_junction, '\n');
+    var right_lines = std.mem.splitScalar(u8, right_junction, '\n');
+    var divider_lines = std.mem.splitScalar(u8, row_divider, '\n');
+    var cross_lines = std.mem.splitScalar(u8, cross_junction, '\n');
     
-    const right_first = if (std.mem.indexOfScalar(u8, right_junction, '\n')) |idx|
-        right_junction[0..idx]
-    else
-        right_junction;
+    // Count maximum lines
+    var max_lines: usize = 0;
+    var temp_left = std.mem.splitScalar(u8, left_junction, '\n');
+    var temp_right = std.mem.splitScalar(u8, right_junction, '\n');
+    var temp_divider = std.mem.splitScalar(u8, row_divider, '\n');
+    var temp_cross = std.mem.splitScalar(u8, cross_junction, '\n');
     
-    const divider_first_line = if (std.mem.indexOfScalar(u8, row_divider, '\n')) |idx|
-        row_divider[0..idx]
-    else
-        row_divider;
+    while (temp_left.next()) |_| : (max_lines = @max(max_lines, 1)) {}
+    var line_count: usize = 0;
+    while (temp_right.next()) |_| : (line_count += 1) {}
+    max_lines = @max(max_lines, line_count);
+    line_count = 0;
+    while (temp_divider.next()) |_| : (line_count += 1) {}
+    max_lines = @max(max_lines, line_count);
+    line_count = 0;
+    while (temp_cross.next()) |_| : (line_count += 1) {}
+    max_lines = @max(max_lines, line_count);
     
-    const cross_first_line = if (std.mem.indexOfScalar(u8, cross_junction, '\n')) |idx|
-        cross_junction[0..idx]
-    else
-        cross_junction;
-
-    // Calculate content width
-    const left_width = utils.displayWidth(left_first);
-    const right_width = utils.displayWidth(right_first);
-    const content_width = width - left_width - right_width;
+    if (max_lines == 0) max_lines = 1;
     
-    // Write left junction
-    try writer.writeAll(left_first);
-    
-    // Render with junctions
-    try renderHorizontalWithJunctions(writer, divider_first_line, cross_first_line, content_width, column_widths);
-    
-    // Write right junction
-    try writer.writeAll(right_first);
-    try writer.writeByte('\n');
+    // Render each line
+    for (0..max_lines) |_| {
+        const left_line = left_lines.next() orelse "";
+        const right_line = right_lines.next() orelse "";
+        const divider_pattern = divider_lines.next() orelse "";
+        const cross_pattern = cross_lines.next() orelse "";
+        
+        // Calculate widths for this line
+        const left_width = utils.displayWidth(left_line);
+        const right_width = utils.displayWidth(right_line);
+        const content_width = width - left_width - right_width;
+        
+        // Write left junction
+        try writer.writeAll(left_line);
+        
+        // Render with junctions
+        try renderHorizontalWithJunctions(writer, divider_pattern, cross_pattern, content_width, column_widths);
+        
+        // Write right junction
+        try writer.writeAll(right_line);
+        try writer.writeByte('\n');
+    }
 }
 
 /// Render a horizontal line with column junctions

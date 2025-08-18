@@ -56,6 +56,7 @@ pub fn build(b: *std.Build) void {
         .{ .name = "test_junctions", .desc = "Test junction characters" },
         .{ .name = "test_junctions_no_title", .desc = "Test junctions without title" },
         .{ .name = "custom_themes", .desc = "Custom theme creation examples" },
+        .{ .name = "western_shop", .desc = "Animated western shop interface demo" },
     };
 
     // Build each example

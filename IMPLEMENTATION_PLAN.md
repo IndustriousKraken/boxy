@@ -269,10 +269,9 @@ Boxy is a focused library that does ONE thing exceptionally well: creating beaut
 2. **Custom Truncation Indicators** - Beyond "..."
 3. **Coordinate System** - getCoords(), getContentArea()
 4. **Word-Aware Breaking** - Smart text wrapping
-5. **Terminal UI Context** - Advanced positioning (stub exists)
 
 #### Low Priority - Advanced Features
-6. **Height Constraints (Proper Implementation)** - Fix height constraint logic to:
+6. **Height Constraints** - Fix height constraint logic to:
    - Only apply when explicitly set (not auto)
    - Track constraint state in LayoutInfo
    - Intelligently truncate/scroll content when constrained
@@ -287,7 +286,6 @@ Boxy is a focused library that does ONE thing exceptionally well: creating beaut
 ## Success Metrics
 
 - **API Simplicity**: ✅ Can create a box in < 5 lines
-- **Performance**: ❓ Not yet benchmarked for 100x100 tables
 - **Flexibility**: ✅ Canvas mode implemented for game UIs
 - **Reliability**: ✅ No panics in current implementation
 - **Size**: ✅ Zero dependencies, small footprint

@@ -6,24 +6,25 @@ pub fn main() !void {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
-    // Create a theme with multi-line horizontal borders
+    // Create a theme with multi-line borders everywhere
     const multiline_theme = boxy.BoxyTheme{
         .horizontal = .{
-            .outer_top = "═\n─",     // Two-line top border
-            .outer_bottom = "═\n─",  // Two-line bottom border
-            .header = "═",
-            .section = "═",
+            .outer_top = "═\n─",        // Two-line top border
+            .outer_bottom = "═\n─",     // Two-line bottom border
+            .header = "━\n╌",           // Two-line header divider
+            .section = "─\n⋯",          // Two-line section divider  
+            .row = "┈\n⋅",              // Two-line row divider
         },
         .vertical = .{
-            .outer_left = "║",
-            .outer_right = "║",
-            .column = "│",
+            .outer_left = "║\n│",      // Two-line left border
+            .outer_right = "║\n│",     // Two-line right border
+            .column = "┊\n¦",          // Two-line column separator
         },
         .junction = .{
-            .outer_top_left = "╔",
-            .outer_top_right = "╗",
-            .outer_bottom_left = "╚",
-            .outer_bottom_right = "╝",
+            .outer_top_left = "╔\n┌",
+            .outer_top_right = "╗\n┐",
+            .outer_bottom_left = "╚\n└",
+            .outer_bottom_right = "╝\n┘",
         },
     };
 

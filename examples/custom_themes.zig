@@ -38,7 +38,7 @@ const matrix_theme = BoxyTheme{
         
         // Column junctions
         .outer_column_t_up          = "₀",
-        .outer_column_t_down        = "╥",
+        .outer_column_t_down        = " ",
         
         // Inner junctions
         .section_column_t_down      = "…",
@@ -124,16 +124,16 @@ const shadow_3d_theme = BoxyTheme{
         .column                     = "│",
     },
     .horizontal = .{
-        .outer_top                  = "▀\nkjsdhf",   
-        .outer_bottom               = "▄\nhjkhkjh░",    
-        .section                    = "═\ns;ldfks;l",
-        .header                     = "─\ndklsfjsdj",
+        .outer_top                  = "▀",   
+        .outer_bottom               = "▄\n░",    
+        .section                    = "═",
+        .header                     = "─",
         .row                        = null,
     },
     .junction = .{
         .outer_top_left             = "█",
-        .outer_top_right            = "█░",     // Shadow on right
-        .outer_bottom_left          = "█",  
+        .outer_top_right            = "█ ",
+        .outer_bottom_left          = "█\n ",  
         .outer_bottom_right         = "█░",    
         
         .outer_section_t_left       = "█░",

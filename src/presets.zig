@@ -22,6 +22,7 @@ pub const StylePreset = enum {
     wooden,      // Crate-like: [=] style
     grid,        // Full grid with row dividers
     spreadsheet, // Light grid for data tables
+    shadow,      // BIOS style UTF shadows
 };
 
 /// Get a theme by preset name
@@ -42,6 +43,7 @@ pub fn getTheme(preset: StylePreset) theme.BoxyTheme {
         .wooden      => wooden_theme,
         .grid        => grid_theme,
         .spreadsheet => spreadsheet_theme,
+        .shadow      => shadow_theme,
     };
 }
 
@@ -515,5 +517,37 @@ pub const wooden_theme = theme.BoxyTheme{
         
         .section_column_t_down      = "[T]",
         .header_column_cross        = "-|-",
+    },
+};
+
+const shadow_theme = theme.BoxyTheme{
+    .vertical = .{
+        .outer_left                 = "█",      // Solid left
+        .outer_right                = "█░",     // Right with shadow
+        .column                     = "│",
+    },
+    .horizontal = .{
+        .outer_top                  = "▀",   
+        .outer_bottom               = "▄\n░",    
+        .section                    = "═",
+        .header                     = "─",
+        .row                        = null,
+    },
+    .junction = .{
+        .outer_top_left             = "█",
+        .outer_top_right            = "█ ",
+        .outer_bottom_left          = "█\n ",  
+        .outer_bottom_right         = "█░",    
+        
+        .outer_section_t_left       = "█░",
+        .outer_section_t_right      = "█",
+        .outer_header_t_left        = "█░",
+        .outer_header_t_right       = "█",
+        
+        .outer_column_t_up          = "▄",
+        .outer_column_t_down        = "▀",
+        
+        .section_column_t_down      = "╤",
+        .header_column_cross        = "┼",
     },
 };
