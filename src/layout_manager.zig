@@ -6,6 +6,7 @@
 
 const std = @import("std");
 const box_mod = @import("box.zig");
+const utils = @import("utils.zig");
 
 /// Information about a placed box
 pub const PlacedBox = struct {
@@ -18,16 +19,16 @@ pub const PlacedBox = struct {
     pub fn getBounds(self: PlacedBox) BoxBounds {
         const rendered = self.box.render() catch return BoxBounds{ .row = self.row, .col = self.col, .width = 0, .height = 0 };
         
-        // Count lines and find max width
+        // Count lines and find max display width
         var lines = std.mem.splitScalar(u8, rendered, '\n');
         var height: usize = 0;
         var width: usize = 0;
         
         while (lines.next()) |line| {
-            if (line.len > 0) {
-                height += 1;
-                width = @max(width, line.len);
-            }
+            height += 1;
+            // Use display width instead of byte length
+            const display_w = utils.displayWidth(line);
+            width = @max(width, display_w);
         }
         
         return BoxBounds{
@@ -53,33 +54,47 @@ pub const BoxBounds = struct {
     }
 };
 
+/// Character cell in the layout buffer
+const Cell = struct {
+    bytes: [4]u8 = [_]u8{0} ** 4,  // UTF-8 character (max 4 bytes)
+    len: u8 = 0,  // Actual byte length
+    width: u8 = 1,  // Display width (1 or 2 columns)
+};
+
 /// Layout manager for positioning multiple boxes
 pub const LayoutManager = struct {
     allocator: std.mem.Allocator,
-    width: usize,
-    height: usize,
-    buffer: [][]u8,
+    width: usize,  // Width in display columns
+    height: usize,  // Height in rows
+    cells: [][]Cell,  // 2D grid of cells
     boxes: std.ArrayList(PlacedBox),
     background_char: u8,
     
     /// Initialize a new layout manager with specified dimensions
     pub fn init(allocator: std.mem.Allocator, width: usize, height: usize) !LayoutManager {
-        var buffer = try allocator.alloc([]u8, height);
-        errdefer allocator.free(buffer);
+        var cells = try allocator.alloc([]Cell, height);
+        errdefer allocator.free(cells);
         
-        for (buffer, 0..) |*row, i| {
-            row.* = try allocator.alloc(u8, width);
+        for (cells, 0..) |*row, i| {
+            row.* = try allocator.alloc(Cell, width);
             errdefer {
-                for (buffer[0..i]) |r| allocator.free(r);
+                for (cells[0..i]) |r| allocator.free(r);
             }
-            @memset(row.*, ' ');
+            // Initialize with spaces
+            for (row.*) |*cell| {
+                cell.* = Cell{
+                    .bytes = [_]u8{' ', 0, 0, 0},
+                    .len = 1,
+                    .width = 1,
+                };
+            }
         }
         
         return LayoutManager{
             .allocator = allocator,
             .width = width,
             .height = height,
-            .buffer = buffer,
+            .cells = cells,
             .boxes = std.ArrayList(PlacedBox).init(allocator),
             .background_char = ' ',
         };
@@ -87,10 +102,10 @@ pub const LayoutManager = struct {
     
     /// Clean up allocated memory
     pub fn deinit(self: *LayoutManager) void {
-        for (self.buffer) |row| {
+        for (self.cells) |row| {
             self.allocator.free(row);
         }
-        self.allocator.free(self.buffer);
+        self.allocator.free(self.cells);
         self.boxes.deinit();
     }
     
@@ -102,8 +117,14 @@ pub const LayoutManager = struct {
     
     /// Clear the layout buffer
     pub fn clear(self: *LayoutManager) void {
-        for (self.buffer) |row| {
-            @memset(row, self.background_char);
+        for (self.cells) |row| {
+            for (row) |*cell| {
+                cell.* = Cell{
+                    .bytes = [_]u8{self.background_char, 0, 0, 0},
+                    .len = 1,
+                    .width = 1,
+                };
+            }
         }
     }
     
@@ -141,6 +162,74 @@ pub const LayoutManager = struct {
         }
     }
     
+    /// Write a UTF-8 character at the specified cell position
+    fn writeCell(self: *LayoutManager, row: usize, col: usize, bytes: []const u8) void {
+        if (row >= self.height or col >= self.width or bytes.len == 0) return;
+        
+        const cell = &self.cells[row][col];
+        const byte_len = @min(bytes.len, 4);
+        
+        // Copy the character bytes
+        @memcpy(cell.bytes[0..byte_len], bytes[0..byte_len]);
+        cell.len = @intCast(byte_len);
+        
+        // Calculate display width
+        cell.width = if (byte_len == 4) 2 else 1;  // Simplified: 4-byte chars are usually emojis (2 columns)
+    }
+    
+    /// Blit a rendered box string to the buffer with display width awareness
+    fn blitString(self: *LayoutManager, start_row: usize, start_col: usize, text: []const u8) void {
+        var lines = std.mem.splitScalar(u8, text, '\n');
+        var row_offset: usize = 0;
+        
+        while (lines.next()) |line| {
+            const target_row = start_row + row_offset;
+            if (target_row >= self.height) break;
+            
+            // Process line character by character
+            var byte_idx: usize = 0;
+            var col_offset: usize = 0;
+            
+            while (byte_idx < line.len) {
+                const target_col = start_col + col_offset;
+                if (target_col >= self.width) break;
+                
+                // Get the next UTF-8 character
+                const byte_count = utils.utf8ByteSequenceLength(line[byte_idx]);
+                const end_idx = @min(byte_idx + byte_count, line.len);
+                const char_bytes = line[byte_idx..end_idx];
+                
+                // Calculate display width
+                const char_width = utils.displayWidth(char_bytes);
+                
+                // Check if character fits
+                if (target_col + char_width <= self.width) {
+                    // Write the character
+                    self.writeCell(target_row, target_col, char_bytes);
+                    
+                    // For wide characters, fill the next cell with a placeholder
+                    if (char_width == 2 and target_col + 1 < self.width) {
+                        // Mark the next cell as continuation of wide char
+                        self.cells[target_row][target_col + 1] = Cell{
+                            .bytes = [_]u8{0} ** 4,
+                            .len = 0,
+                            .width = 0,  // Continuation cell
+                        };
+                    }
+                    
+                    col_offset += char_width;
+                } else {
+                    // Character doesn't fit, skip to next line
+                    break;
+                }
+                
+                byte_idx = end_idx;
+            }
+            
+            row_offset += 1;
+        }
+    }
+    
     /// Render all placed boxes to the buffer and return as string
     pub fn render(self: *LayoutManager) ![]const u8 {
         // Clear buffer first
@@ -152,40 +241,42 @@ pub const LayoutManager = struct {
             self.blitString(placed.row, placed.col, rendered);
         }
         
-        // Convert buffer to string
+        // Convert cells to string
         var result = std.ArrayList(u8).init(self.allocator);
         defer result.deinit();
         
-        for (self.buffer, 0..) |row, i| {
-            try result.appendSlice(row);
-            if (i < self.buffer.len - 1) {
+        for (self.cells, 0..) |row, row_idx| {
+            var col_idx: usize = 0;
+            while (col_idx < self.width) {
+                const cell = row[col_idx];
+                
+                if (cell.len > 0) {
+                    // Write the character bytes
+                    try result.appendSlice(cell.bytes[0..cell.len]);
+                    
+                    // Skip continuation cells for wide characters
+                    if (cell.width == 2) {
+                        col_idx += 2;
+                    } else {
+                        col_idx += 1;
+                    }
+                } else if (cell.width == 0) {
+                    // Continuation cell, skip it (already handled by wide char)
+                    col_idx += 1;
+                } else {
+                    // Empty cell, write space
+                    try result.append(' ');
+                    col_idx += 1;
+                }
+            }
+            
+            // Add newline except for last row
+            if (row_idx < self.cells.len - 1) {
                 try result.append('\n');
             }
         }
         
         return try result.toOwnedSlice();
-    }
-    
-    /// Blit a rendered box string to the buffer
-    fn blitString(self: *LayoutManager, start_row: usize, start_col: usize, text: []const u8) void {
-        var lines = std.mem.splitScalar(u8, text, '\n');
-        var row_offset: usize = 0;
-        
-        while (lines.next()) |line| {
-            const target_row = start_row + row_offset;
-            if (target_row >= self.height) break;
-            
-            // Simply copy bytes directly - the buffer will hold UTF-8 as-is
-            const start = start_col;
-            const end = @min(start_col + line.len, self.width);
-            if (start < end) {
-                const copy_len = end - start;
-                const source_slice = line[0..@min(copy_len, line.len)];
-                @memcpy(self.buffer[target_row][start..end], source_slice);
-            }
-            
-            row_offset += 1;
-        }
     }
     
     /// Get the box at the specified position (for hit testing)
