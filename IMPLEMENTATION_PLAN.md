@@ -262,7 +262,7 @@ Boxy is a focused library that does ONE thing exceptionally well: creating beaut
 - **Extra Space Strategy** - Control distribution of extra space in fixed-width boxes (first/last/distributed/center)
 - **Height Constraints** - Basic exact/min/max methods (needs proper implementation - see todo #8)
 
-### ⬜ Not Yet Implemented (Priority Order)
+### ⬜ Not Yet Implemented
 
 #### Medium Priority - Enhanced API
 1. **Column Width Control** - Per-column size constraints
@@ -290,15 +290,8 @@ Boxy is a focused library that does ONE thing exceptionally well: creating beaut
 - **Reliability**: ✅ No panics in current implementation
 - **Size**: ✅ Zero dependencies, small footprint
 
-## Key Insight
-
-The magic of Boxy is NOT in doing everything, but in doing boxes so well that everything else becomes easy to build on top. Like LEGO blocks - simple, solid, composable.
-
 ## Next Steps (Recommended Order)
 
 1. **Column Width Control** - Add per-column size constraints
 2. **Custom Truncation Indicators** - Allow customizing "..." for truncated text
 3. **Word-Aware Breaking** - Smart text wrapping for long content
-4. **Benchmark Performance** - Validate 100x100 table rendering speed
-5. **Height Constraints (Proper)** - Fix the implementation when explicitly set
-5. **More Examples** - Add examples for canvas animations, factory usage, and advanced layouts
