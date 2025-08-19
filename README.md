@@ -5,6 +5,8 @@ padded boxes like this:
 
 ![A photo of a delightful box rendered in ASCII](boxy_1.png "Such a great box!")
 
+![An invoice made with Boxy](coffee-invoice.png "Invoice Example")
+
 Neat huh? Boxes can be auto-sized to text, and text can be truncated to fit 
 boxes! There are also default boxy themes, and you can eeeeeasily (easily!)
 design your own themes with simple structs. That way if you want a box
@@ -226,6 +228,8 @@ This gives you a clean, bordered area to work with - perfect for:
 - Text-based drawing programs
 
 Boxy handles the box structure, you handle the content!
+
+![A photo of a game interface using boxy.](western-shop.png "Western Shop")
 
 ## Philosophy: Composable, Not Comprehensive
 
